@@ -63,3 +63,47 @@ test('router knows #/feed', () => {
   assert.deepEqual(parseRoute('#/feed'), { name: 'feed' });
   assert.deepEqual(parseRoute('#/feed/'), { name: 'feed' });
 });
+
+// ---- Latest page: grouping, "new" markers, formatting ----
+import { groupFeedItems, isNewItem, countNewItems } from '../js/filters.js';
+import { fmtDate, hoursSince } from '../js/views/feed.js';
+
+const NOW = Date.parse('2026-11-04T12:00:00Z');
+const at = (iso) => ({ title: 't', link: 'https://e.org/' + iso, published: iso });
+
+test('groupFeedItems buckets by age, newest first, with stable labels', () => {
+  const items = [at('2026-10-01T00:00:00Z'), at('2026-11-04T08:00:00Z'), at('2026-11-03T23:59:00Z'), at('2026-10-30T10:00:00Z'), at('2026-10-20T00:00:00Z'), at('2026-09-02T00:00:00Z'), { title: 'x', link: 'https://e.org/u' }];
+  const g = groupFeedItems(items, NOW);
+  assert.deepEqual(g.map((x) => x.label), ['Today', 'Yesterday', 'Earlier this week', 'Earlier this month', 'October 2026', 'September 2026', 'Undated']);
+  assert.equal(g.reduce((n, x) => n + x.items.length, 0), items.length);
+});
+
+test('groupFeedItems sorts within a group and treats future dates as today', () => {
+  const g = groupFeedItems([at('2026-11-04T01:00:00Z'), at('2026-11-04T09:00:00Z'), at('2026-11-20T00:00:00Z')], NOW);
+  assert.equal(g.length, 1);
+  assert.equal(g[0].label, 'Today');
+  assert.deepEqual(g[0].items.map((i) => i.published), ['2026-11-20T00:00:00Z', '2026-11-04T09:00:00Z', '2026-11-04T01:00:00Z']);
+});
+
+test('groupFeedItems handles empty and junk input', () => {
+  assert.deepEqual(groupFeedItems([], NOW), []);
+  assert.deepEqual(groupFeedItems(null, NOW), []);
+  assert.equal(groupFeedItems([{ title: 'a', link: 'https://e.org', published: 'not a date' }], NOW)[0].label, 'Undated');
+});
+
+test('isNewItem / countNewItems: only items after the baseline; first visit marks nothing', () => {
+  const items = [at('2026-11-04T08:00:00Z'), at('2026-11-01T00:00:00Z'), { title: 'x', link: 'https://e.org/u' }];
+  const base = Date.parse('2026-11-02T00:00:00Z');
+  assert.equal(countNewItems(items, base), 1);
+  assert.equal(isNewItem(items[1], base), false);
+  assert.equal(isNewItem(items[2], base), false);
+  assert.equal(countNewItems(items, 0), 0);
+  assert.equal(countNewItems(null, base), 0);
+});
+
+test('fmtDate and hoursSince', () => {
+  assert.equal(fmtDate('2026-10-30T10:00:00.000Z'), '30 Oct 2026');
+  assert.equal(fmtDate('nope'), '');
+  assert.equal(hoursSince('2026-11-04T10:00:00Z', NOW), 2);
+  assert.equal(hoursSince('nope', NOW), Infinity);
+});

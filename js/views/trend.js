@@ -3,7 +3,7 @@
 
 import { state, makeCtx } from '../store.js';
 import { sortRecs } from '../filters.js';
-import { esc, safeUrl, badge, categoryChips, verificationBadge, watchButton, dateLine, recCard, labelOf } from '../ui.js';
+import { esc, safeUrl, icon, badge, categoryChips, verificationBadge, watchButton, dateLine, recCard, labelOf } from '../ui.js';
 
 function sourceItem(s) {
   const url = safeUrl(s.url);
@@ -27,22 +27,29 @@ export function renderTrend(id) {
     : '';
   return {
     title: t.title,
-    html: `<p class="crumb"><a href="#/">&larr; All trends</a></p>
+    html: `<p class="crumb"><a href="#/">${icon('back')} All trends</a></p>
 <h1 tabindex="-1">${esc(t.title)}</h1>
 <p class="chips">${categoryChips(t, tx)}</p>
-<p class="badges">${badge('maturity', t.maturity, tx)} ${badge('impact', t.impact, tx)} ${badge('momentum', t.momentum, tx)} ${verificationBadge(t)}</p>
-<p class="small">${dateLine(t, ctx.isStale(t.lastUpdated))}</p>
-<p>${watchButton(t.id, ctx.isWatched(t.id), t.title)}</p>
+<div class="trend-head">
+  <p class="badges">${badge('maturity', t.maturity, tx)} ${badge('impact', t.impact, tx)} ${badge('momentum', t.momentum, tx)} ${verificationBadge(t)}</p>
+  <div class="trend-actions"><p class="small">${dateLine(t, ctx.isStale(t.lastUpdated))}</p>${watchButton(t.id, ctx.isWatched(t.id), t.title)}</div>
+</div>
 ${verification}
-<section aria-labelledby="h-summary"><h2 id="h-summary">Summary</h2><p>${esc(t.summary)}</p></section>
-<section aria-labelledby="h-why"><h2 id="h-why">Why it matters</h2><p>${esc(t.whyItMatters)}</p></section>
-<section aria-labelledby="h-risks"><h2 id="h-risks">Risks and challenges</h2>${list(t.risks)}</section>
-<section aria-labelledby="h-std"><h2 id="h-std">Key standards</h2>${list(t.keyStandards)}</section>
-<section aria-labelledby="h-recs"><h2 id="h-recs">Recommendations</h2>
-  <ul class="grid" aria-label="Recommendations for this trend">${recs.map((r) => recCard(r, ctx)).join('')}</ul></section>
-<section aria-labelledby="h-src"><h2 id="h-src">Sources</h2><ul class="sources">${t.sources.map(sourceItem).join('')}</ul></section>
-<section aria-labelledby="h-rel"><h2 id="h-rel">Related trends</h2>${related.length
+<div class="detail">
+  <div class="detail-main">
+    <section aria-labelledby="h-summary"><h2 id="h-summary">Summary</h2><p class="lead-text">${esc(t.summary)}</p></section>
+    <section aria-labelledby="h-why"><h2 id="h-why">Why it matters</h2><p>${esc(t.whyItMatters)}</p></section>
+    <section aria-labelledby="h-risks"><h2 id="h-risks">Risks and challenges</h2>${list(t.risks)}</section>
+    <section aria-labelledby="h-recs"><h2 id="h-recs">Recommendations</h2>
+      <ul class="rec-list" aria-label="Recommendations for this trend">${recs.map((r) => recCard(r, ctx)).join('')}</ul></section>
+    <section aria-labelledby="h-rel"><h2 id="h-rel">Related trends</h2>${related.length
       ? `<ul>${related.map((r) => `<li><a href="#/trend/${encodeURIComponent(r.id)}">${esc(r.title)}</a> <span class="muted small">(${esc(labelOf(tx.categories, r.categories[0]))})</span></li>`).join('')}</ul>`
-      : '<p class="muted">None listed.</p>'}</section>`
+      : '<p class="muted">None listed.</p>'}</section>
+  </div>
+  <aside class="detail-aside" aria-label="Standards and sources">
+    <section aria-labelledby="h-std"><h2 id="h-std">Key standards</h2>${list(t.keyStandards)}</section>
+    <section aria-labelledby="h-src"><h2 id="h-src">Sources</h2><ul class="sources">${t.sources.map(sourceItem).join('')}</ul></section>
+  </aside>
+</div>`
   };
 }

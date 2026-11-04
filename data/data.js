@@ -4,7 +4,7 @@ window.IAM_DATA = {
   "schemaVersion": 1,
   "datasetVersion": "2026.11.0",
   "lastUpdated": "2026-11-04",
-  "disclaimer": "Curated summary; verify before acting. Items flagged needsVerification have unconfirmed claims."
+  "disclaimer": "Curated summary; verify before acting. Anything marked \"Needs verification\" has unconfirmed claims."
  },
  "taxonomy": {
   "categories": [

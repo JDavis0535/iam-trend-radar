@@ -97,3 +97,52 @@ export function isStale(lastUpdated, now = new Date(), days = 180) {
   if (Number.isNaN(d.getTime())) return false;
   return (now.getTime() - d.getTime()) / 86400000 > days;
 }
+
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const DAY_MS = 86400000;
+
+function utcDay(ms) { return Math.floor(ms / DAY_MS); }
+
+/**
+ * Groups feed items (newest first) into labelled sections by age: Today, Yesterday, Earlier this week,
+ * Earlier this month, then one section per month, then Undated. Pure; `now` is injectable (ms).
+ * Dates are compared as UTC days. Items dated in the future count as today.
+ */
+export function groupFeedItems(items, now = Date.now()) {
+  const groups = [];
+  const byKey = new Map();
+  const add = (key, label, item) => {
+    if (!byKey.has(key)) { const g = { key, label, items: [] }; byKey.set(key, g); groups.push(g); }
+    byKey.get(key).items.push(item);
+  };
+  const dated = [], undated = [];
+  for (const it of items || []) (Number.isNaN(Date.parse(it.published)) ? undated : dated).push(it);
+  dated.sort((a, b) => Date.parse(b.published) - Date.parse(a.published));
+  for (const it of dated) {
+    const t = Date.parse(it.published);
+    const age = utcDay(now) - utcDay(t);
+    if (age <= 0) add('today', 'Today', it);
+    else if (age === 1) add('yesterday', 'Yesterday', it);
+    else if (age < 7) add('week', 'Earlier this week', it);
+    else if (age < 30) add('month', 'Earlier this month', it);
+    else { const d = new Date(t); add(`m-${d.getUTCFullYear()}-${d.getUTCMonth()}`, `${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`, it); }
+  }
+  for (const it of undated) add('undated', 'Undated', it);
+  return groups;
+}
+
+/** True when the item was published after the baseline time (ms). A zero or missing baseline marks nothing new. */
+export function isNewItem(item, baselineMs) {
+  const t = Date.parse(item && item.published);
+  return Boolean(baselineMs) && !Number.isNaN(t) && t > baselineMs;
+}
+
+export function countNewItems(items, baselineMs) {
+  return (items || []).filter((i) => isNewItem(i, baselineMs)).length;
+}
+
+/** Number of active recommendation filters: horizon, effort, impact, trend and quick wins. Sort is not counted. */
+export function countActiveRecs(filters) {
+  const f = { ...defaultRecFilters(), ...(filters || {}) };
+  return ['horizon', 'effort', 'impact', 'trendId'].filter((k) => f[k]).length + (f.quickWins ? 1 : 0);
+}

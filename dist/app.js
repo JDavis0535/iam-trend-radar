@@ -102,6 +102,55 @@ function isStale(lastUpdated, now = new Date(), days = 180) {
   return (now.getTime() - d.getTime()) / 86400000 > days;
 }
 
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const DAY_MS = 86400000;
+
+function utcDay(ms) { return Math.floor(ms / DAY_MS); }
+
+/**
+ * Groups feed items (newest first) into labelled sections by age: Today, Yesterday, Earlier this week,
+ * Earlier this month, then one section per month, then Undated. Pure; `now` is injectable (ms).
+ * Dates are compared as UTC days. Items dated in the future count as today.
+ */
+function groupFeedItems(items, now = Date.now()) {
+  const groups = [];
+  const byKey = new Map();
+  const add = (key, label, item) => {
+    if (!byKey.has(key)) { const g = { key, label, items: [] }; byKey.set(key, g); groups.push(g); }
+    byKey.get(key).items.push(item);
+  };
+  const dated = [], undated = [];
+  for (const it of items || []) (Number.isNaN(Date.parse(it.published)) ? undated : dated).push(it);
+  dated.sort((a, b) => Date.parse(b.published) - Date.parse(a.published));
+  for (const it of dated) {
+    const t = Date.parse(it.published);
+    const age = utcDay(now) - utcDay(t);
+    if (age <= 0) add('today', 'Today', it);
+    else if (age === 1) add('yesterday', 'Yesterday', it);
+    else if (age < 7) add('week', 'Earlier this week', it);
+    else if (age < 30) add('month', 'Earlier this month', it);
+    else { const d = new Date(t); add(`m-${d.getUTCFullYear()}-${d.getUTCMonth()}`, `${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`, it); }
+  }
+  for (const it of undated) add('undated', 'Undated', it);
+  return groups;
+}
+
+/** True when the item was published after the baseline time (ms). A zero or missing baseline marks nothing new. */
+function isNewItem(item, baselineMs) {
+  const t = Date.parse(item && item.published);
+  return Boolean(baselineMs) && !Number.isNaN(t) && t > baselineMs;
+}
+
+function countNewItems(items, baselineMs) {
+  return (items || []).filter((i) => isNewItem(i, baselineMs)).length;
+}
+
+/** Number of active recommendation filters: horizon, effort, impact, trend and quick wins. Sort is not counted. */
+function countActiveRecs(filters) {
+  const f = { ...defaultRecFilters(), ...(filters || {}) };
+  return ['horizon', 'effort', 'impact', 'trendId'].filter((k) => f[k]).length + (f.quickWins ? 1 : 0);
+}
+
 /* ---- js/ui.js ---- */
 // ui.js - shared rendering helpers: HTML escaping, URL safety, badges, cards, option lists.
 // All data fields must pass through esc() before being placed in an HTML string. No DOM access at import time.
@@ -125,11 +174,31 @@ function labelOf(list, id) {
   return hit ? hit.label : String(id ?? '');
 }
 
-const GLYPHS = {
-  maturity: { emerging: '◔', growing: '◑', mainstream: '◕', established: '●' },
-  momentum: { rising: '↗', steady: '→', cooling: '↘' },
-  horizon: { now: '▶', next: '▷', later: '○' }
+// Icons are drawn as inline SVG on one 16px grid with a 1.75 stroke, not as Unicode glyphs, which change shape from
+// font to font. The paths are static strings and nothing from the data ever reaches them. Names double as the
+// taxonomy ids for maturity, momentum and horizon, so a badge looks its icon up by id.
+const RING = '<circle cx="8" cy="8" r="6"/>';
+const ICON_PATHS = {
+  emerging: `${RING}<path d="M8 8V3A5 5 0 0 1 13 8z" fill="currentColor" stroke="none"/>`,
+  growing: `${RING}<path d="M8 8V3A5 5 0 0 1 8 13z" fill="currentColor" stroke="none"/>`,
+  mainstream: `${RING}<path d="M8 8V3A5 5 0 1 1 3 8z" fill="currentColor" stroke="none"/>`,
+  established: `${RING}<circle cx="8" cy="8" r="3.6" fill="currentColor" stroke="none"/>`,
+  rising: '<path d="M4.5 11.5l7-7M5.5 4.5h6v6"/>',
+  steady: '<path d="M3 8h9.5M9 4.5L12.5 8 9 11.5"/>',
+  cooling: '<path d="M4.5 4.5l7 7M5.5 11.5h6v-6"/>',
+  now: '<circle cx="3" cy="8" r="1.15" fill="currentColor"/><circle cx="8" cy="8" r="1.15"/><circle cx="13" cy="8" r="1.15"/>',
+  next: '<circle cx="3" cy="8" r="1.15"/><circle cx="8" cy="8" r="1.15" fill="currentColor"/><circle cx="13" cy="8" r="1.15"/>',
+  later: '<circle cx="3" cy="8" r="1.15"/><circle cx="8" cy="8" r="1.15"/><circle cx="13" cy="8" r="1.15" fill="currentColor"/>',
+  star: '<path d="M8 1.9l1.85 3.9 4.25.55-3.1 2.95.8 4.25L8 11.45 4.2 13.55l.8-4.25-3.1-2.95 4.25-.55z"/>',
+  warn: '<path d="M8 2.2l6.2 11H1.8z"/><path d="M8 6.4v3.2M8 11.6v.1"/>',
+  back: '<path d="M10 3.5L5.5 8l4.5 4.5"/>'
 };
+
+/** Inline SVG icon by name; '' for an unknown name. Always decorative (aria-hidden). */
+function icon(name, cls = '') {
+  if (!Object.prototype.hasOwnProperty.call(ICON_PATHS, name)) return '';
+  return `<svg class="ico${cls ? ` ${esc(cls)}` : ''}" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${ICON_PATHS[name]}</svg>`;
+}
 
 // Impact and effort are drawn as small CSS meters (filled bars) rather than block characters, which render
 // inconsistently across fonts. level = filled bars, total = bars drawn.
@@ -143,10 +212,10 @@ function meter(kind, id) {
 
 const KIND_LABELS = { maturity: 'Maturity', impact: 'Impact', momentum: 'Momentum', horizon: 'Horizon', effort: 'Effort' };
 
-/** Badge with a glyph, a visible text label and a screen-reader prefix. Never color-only. */
+/** Badge with a drawn icon or meter, a visible text label and a screen-reader prefix. Never color-only. */
 function badge(kind, id, taxonomy) {
   const text = labelOf(taxonomy && taxonomy[kind], id);
-  const glyph = METER[kind] ? meter(kind, id) : esc((GLYPHS[kind] && GLYPHS[kind][id]) || '•');
+  const glyph = METER[kind] ? meter(kind, id) : icon(id);
   return `<span class="badge badge-${esc(kind)} badge-v-${esc(id)}"><span aria-hidden="true">${glyph}</span> <span class="vh">${esc(KIND_LABELS[kind] || kind)}: </span>${esc(text)}</span>`;
 }
 
@@ -156,11 +225,11 @@ function categoryChips(item, taxonomy) {
 
 function verificationBadge(item) {
   if (!item.needsVerification) return '';
-  return `<span class="badge badge-warn"><span aria-hidden="true">⚠</span> Needs verification</span>`;
+  return `<span class="badge badge-warn">${icon('warn')} Needs verification</span>`;
 }
 
 function watchButton(id, watched, title) {
-  return `<button type="button" class="btn btn-watch" data-watch="${esc(id)}" aria-pressed="${watched ? 'true' : 'false'}" aria-label="Watch ${esc(title)}">${watched ? '★ Watching' : '☆ Watch'}</button>`;
+  return `<button type="button" class="btn btn-watch" data-watch="${esc(id)}" aria-pressed="${watched ? 'true' : 'false'}" aria-label="Watch ${esc(title)}">${icon('star')}<span>${watched ? 'Watching' : 'Watch'}</span></button>`;
 }
 
 function dateLine(item, stale) {
@@ -191,7 +260,7 @@ function recCard(r, ctx) {
     return `<li>${dep ? esc(dep.title) : esc(d)}</li>`;
   }).join('');
   const list = (arr) => (arr || []).map((s) => `<li>${esc(s)}</li>`).join('');
-  return `<li class="card">
+  return `<li class="card rec">
   <h3 class="card-title">${esc(r.title)}</h3>
   <p class="badges">${badge('horizon', r.horizon, tx)} ${badge('effort', r.effort, tx)} ${badge('impact', r.impact, tx)} <span class="badge"><span class="vh">Priority score: </span>Priority ${ctx.score(r)}</span></p>
   <p>${esc(r.description)}</p>
@@ -221,7 +290,7 @@ function landscape(trends, tx) {
   if (!trends.length) return '';
   const cols = tx.maturity;
   const rows = [...tx.impact].reverse();
-  const dot = (t) => `<a class="dot dot-${esc(t.momentum)}" href="#/trend/${encodeURIComponent(t.id)}"><span aria-hidden="true">${esc((GLYPHS.momentum && GLYPHS.momentum[t.momentum]) || '•')}</span> ${esc(t.title)}<span class="vh"> (Momentum: ${esc(labelOf(tx.momentum, t.momentum))})</span></a>`;
+  const dot = (t) => `<a class="dot dot-${esc(t.momentum)}" href="#/trend/${encodeURIComponent(t.id)}">${icon(t.momentum)} ${esc(t.title)}<span class="vh"> (Momentum: ${esc(labelOf(tx.momentum, t.momentum))})</span></a>`;
   const body = rows.map((imp) => {
     const cells = cols.map((mat) => {
       const ts = trends.filter((t) => t.maturity === mat.id && t.impact === imp.id);
@@ -240,8 +309,8 @@ function chipRadios(name, legend, items, selected, allLabel) {
 }
 
 /** Single checkbox drawn as a toggle chip. */
-function chipCheck(name, id, label, checked) {
-  return `<label class="opt"><input type="checkbox" id="${esc(id)}" name="${esc(name)}"${checked ? ' checked' : ''}><span>${esc(label)}</span></label>`;
+function chipCheck(name, id, label, checked, iconName) {
+  return `<label class="opt"><input type="checkbox" id="${esc(id)}" name="${esc(name)}"${checked ? ' checked' : ''}><span>${iconName ? icon(iconName) : ''}${esc(label)}</span></label>`;
 }
 
 function emptyState(message, actionHtml) {
@@ -447,7 +516,7 @@ function makeCtx() {
 }
 
 /* ---- js/views/dashboard.js ---- */
-// views/dashboard.js - stat tiles, maturity x impact landscape and trend card grid, driven by combined filters, search, sort and a live result count.
+// views/dashboard.js - a summary line, the maturity x impact landscape and trend card grid, driven by combined filters, search, sort and a live result count.
 // Filters live in store.state.filters (persisted), so they survive navigation to a trend and back.
 
 
@@ -491,13 +560,7 @@ function renderDashboard() {
     title: 'Dashboard',
     html: `<h1 tabindex="-1">What is changing in identity and access</h1>
 <p class="lead">How mature and impactful each trend is, and what to do about it.</p>
-<ul class="tiles" aria-label="Dataset summary">
-  <li class="tile"><strong>${state.trends.length}</strong><span>Trends</span></li>
-  <li class="tile"><strong>${state.recommendations.length}</strong><span>Recommendations</span></li>
-  <li class="tile"><strong>${rising}</strong><span>Rising momentum</span></li>
-  <li class="tile"><strong>${esc(state.meta.lastUpdated)}</strong><span>Data updated</span></li>${flagged ? `
-  <li class="tile tile-warn"><strong>${flagged}</strong><span>Need verification</span></li>` : ''}
-</ul>
+<p class="summary-line" aria-label="Dataset summary"><strong>${state.trends.length}</strong> trends, <strong>${state.recommendations.length}</strong> recommendations, <strong>${rising}</strong> with rising momentum${flagged ? `, <strong>${flagged}</strong> needing verification` : ''}. Data updated <time datetime="${esc(state.meta.lastUpdated)}">${esc(state.meta.lastUpdated)}</time>.</p>
 <form class="dash-filters${panelOpen ? ' open' : ''}" id="filter-form" role="search" aria-label="Filter trends" autocomplete="off">
   <div class="filter-bar">
     <div class="bar-search"><label for="f-text" class="vh">Search trends</label><input type="search" id="f-text" name="text" value="${esc(f.text)}" placeholder="Search title, summary, standard"></div>
@@ -510,7 +573,7 @@ function renderDashboard() {
     ${chipRadios('maturity', 'Maturity', tx.maturity, f.maturity, 'All')}
     ${chipRadios('impact', 'Impact', tx.impact, f.impact, 'All')}
     ${chipRadios('momentum', 'Momentum', tx.momentum, f.momentum, 'All')}
-    <div class="panel-actions">${chipCheck('watchOnly', 'f-watch', '★ Watchlist only', f.watchOnly)}<button type="button" class="btn btn-compact" id="clear-filters" data-action="clear-filters"${sum.any ? '' : ' hidden'}>Clear filters</button></div>
+    <div class="panel-actions">${chipCheck('watchOnly', 'f-watch', 'Watchlist only', f.watchOnly, 'star')}<button type="button" class="btn btn-compact" id="clear-filters" data-action="clear-filters"${sum.any ? '' : ' hidden'}>Clear filters</button></div>
   </div>
 </form>
 <section class="landscape" id="landscape" aria-labelledby="h-landscape"${res.list.length ? '' : ' hidden'}>
@@ -595,39 +658,50 @@ function renderTrend(id) {
     : '';
   return {
     title: t.title,
-    html: `<p class="crumb"><a href="#/">&larr; All trends</a></p>
+    html: `<p class="crumb"><a href="#/">${icon('back')} All trends</a></p>
 <h1 tabindex="-1">${esc(t.title)}</h1>
 <p class="chips">${categoryChips(t, tx)}</p>
-<p class="badges">${badge('maturity', t.maturity, tx)} ${badge('impact', t.impact, tx)} ${badge('momentum', t.momentum, tx)} ${verificationBadge(t)}</p>
-<p class="small">${dateLine(t, ctx.isStale(t.lastUpdated))}</p>
-<p>${watchButton(t.id, ctx.isWatched(t.id), t.title)}</p>
+<div class="trend-head">
+  <p class="badges">${badge('maturity', t.maturity, tx)} ${badge('impact', t.impact, tx)} ${badge('momentum', t.momentum, tx)} ${verificationBadge(t)}</p>
+  <div class="trend-actions"><p class="small">${dateLine(t, ctx.isStale(t.lastUpdated))}</p>${watchButton(t.id, ctx.isWatched(t.id), t.title)}</div>
+</div>
 ${verification}
-<section aria-labelledby="h-summary"><h2 id="h-summary">Summary</h2><p>${esc(t.summary)}</p></section>
-<section aria-labelledby="h-why"><h2 id="h-why">Why it matters</h2><p>${esc(t.whyItMatters)}</p></section>
-<section aria-labelledby="h-risks"><h2 id="h-risks">Risks and challenges</h2>${list(t.risks)}</section>
-<section aria-labelledby="h-std"><h2 id="h-std">Key standards</h2>${list(t.keyStandards)}</section>
-<section aria-labelledby="h-recs"><h2 id="h-recs">Recommendations</h2>
-  <ul class="grid" aria-label="Recommendations for this trend">${recs.map((r) => recCard(r, ctx)).join('')}</ul></section>
-<section aria-labelledby="h-src"><h2 id="h-src">Sources</h2><ul class="sources">${t.sources.map(sourceItem).join('')}</ul></section>
-<section aria-labelledby="h-rel"><h2 id="h-rel">Related trends</h2>${related.length
+<div class="detail">
+  <div class="detail-main">
+    <section aria-labelledby="h-summary"><h2 id="h-summary">Summary</h2><p class="lead-text">${esc(t.summary)}</p></section>
+    <section aria-labelledby="h-why"><h2 id="h-why">Why it matters</h2><p>${esc(t.whyItMatters)}</p></section>
+    <section aria-labelledby="h-risks"><h2 id="h-risks">Risks and challenges</h2>${list(t.risks)}</section>
+    <section aria-labelledby="h-recs"><h2 id="h-recs">Recommendations</h2>
+      <ul class="rec-list" aria-label="Recommendations for this trend">${recs.map((r) => recCard(r, ctx)).join('')}</ul></section>
+    <section aria-labelledby="h-rel"><h2 id="h-rel">Related trends</h2>${related.length
       ? `<ul>${related.map((r) => `<li><a href="#/trend/${encodeURIComponent(r.id)}">${esc(r.title)}</a> <span class="muted small">(${esc(labelOf(tx.categories, r.categories[0]))})</span></li>`).join('')}</ul>`
-      : '<p class="muted">None listed.</p>'}</section>`
+      : '<p class="muted">None listed.</p>'}</section>
+  </div>
+  <aside class="detail-aside" aria-label="Standards and sources">
+    <section aria-labelledby="h-std"><h2 id="h-std">Key standards</h2>${list(t.keyStandards)}</section>
+    <section aria-labelledby="h-src"><h2 id="h-src">Sources</h2><ul class="sources">${t.sources.map(sourceItem).join('')}</ul></section>
+  </aside>
+</div>`
   };
 }
 
 /* ---- js/views/playbook.js ---- */
-// views/playbook.js - all recommendations with computed priority score, filters, sort and a Quick wins preset.
+// views/playbook.js - all recommendations as ranked rows with computed priority score, a sticky filter bar
+// (horizon / effort / impact chips, trend, sort, Quick wins preset) that collapses behind a toggle on narrow screens.
 
 
 
 
+
+// Whether the filter panel is open on narrow screens (always shown on wide ones). Module-level so it survives re-renders.
+let recPanelOpen = false;
 
 function playbookResults() {
   const ctx = makeCtx();
   const list = sortRecs(filterRecs(state.recommendations, state.recFilters), state.recFilters.sort);
   const count = `${list.length} of ${state.recommendations.length} recommendations shown`;
   const html = list.length
-    ? `<ol class="grid" aria-label="Recommendations">${list.map((r) => recCard(r, ctx)).join('')}</ol>`
+    ? `<ol class="rec-list" aria-label="Recommendations">${list.map((r) => recCard(r, ctx)).join('')}</ol>`
     : emptyState('No recommendations match these filters.', '<p><button type="button" class="btn" data-action="clear-rec-filters">Clear filters</button></p>');
   return { count, html };
 }
@@ -636,6 +710,7 @@ function renderPlaybook() {
   const f = state.recFilters;
   const tx = state.taxonomy;
   const res = playbookResults();
+  const n = countActiveRecs(f);
   const trendOpts = [...state.trends].sort((a, b) => a.title.localeCompare(b.title)).map((t) => ({ id: t.id, label: t.title }));
   const sorts = [
     { id: 'priority', label: 'Priority score (high first)' },
@@ -645,17 +720,21 @@ function renderPlaybook() {
   return {
     title: 'Playbook',
     html: `<h1 tabindex="-1">Playbook</h1>
-<p class="lead">Recommendations linked to trends. Priority score = impact rank x 2 minus effort rank (see <a href="#/about">About</a>); higher is better.</p>
-<form class="filters" id="rec-form" role="search" aria-label="Filter recommendations" autocomplete="off">
-  <div class="field"><label for="p-horizon">Horizon</label><select id="p-horizon" name="horizon">${options(tx.horizon, f.horizon, 'All horizons')}</select></div>
-  <div class="field"><label for="p-effort">Effort</label><select id="p-effort" name="effort">${options(tx.effort, f.effort, 'All efforts')}</select></div>
-  <div class="field"><label for="p-impact">Impact</label><select id="p-impact" name="impact">${options(tx.impact, f.impact, 'All impacts')}</select></div>
-  <div class="field"><label for="p-trend">Trend</label><select id="p-trend" name="trendId">${options(trendOpts, f.trendId, 'All trends')}</select></div>
-  <div class="field"><label for="p-sort">Sort by</label><select id="p-sort" name="sort">${options(sorts, f.sort, null)}</select></div>
-  <div class="field field-check"><label><input type="checkbox" id="p-quick" name="quickWins"${f.quickWins ? ' checked' : ''}> Quick wins (low effort, high or transformative impact)</label></div>
-  <div class="field field-check"><button type="button" class="btn" data-action="clear-rec-filters">Clear filters</button></div>
+<p class="lead">Recommendations linked to trends. Priority score = impact rank x 2 minus effort rank (see <a href="#/about">About</a>); higher is better. Quick wins are low effort with high or transformative impact.</p>
+<form class="dash-filters${recPanelOpen ? ' open' : ''}" id="rec-form" role="search" aria-label="Filter recommendations" autocomplete="off">
+  <div class="filter-bar">
+    <button type="button" class="btn btn-compact filter-toggle" id="rec-toggle" aria-expanded="${recPanelOpen}" aria-controls="rec-panel">Filters<span id="rec-count">${n ? ` (${n})` : ''}</span></button>
+    <div class="bar-sort"><label for="p-sort" class="vh">Sort by</label><select id="p-sort" name="sort">${options(sorts, f.sort, null)}</select></div>
+    <p id="result-count" class="result-count" role="status" aria-live="polite">${esc(res.count)}</p>
+  </div>
+  <div class="filter-panel" id="rec-panel">
+    ${chipRadios('horizon', 'Horizon', tx.horizon, f.horizon, 'All')}
+    ${chipRadios('effort', 'Effort', tx.effort, f.effort, 'All')}
+    ${chipRadios('impact', 'Impact', tx.impact, f.impact, 'All')}
+    <div class="field"><label for="p-trend">Trend</label><select id="p-trend" name="trendId">${options(trendOpts, f.trendId, 'All trends')}</select></div>
+    <div class="panel-actions">${chipCheck('quickWins', 'p-quick', 'Quick wins', f.quickWins)}<button type="button" class="btn btn-compact" id="rec-clear" data-action="clear-rec-filters"${n ? '' : ' hidden'}>Clear filters</button></div>
+  </div>
 </form>
-<p id="result-count" class="result-count" role="status" aria-live="polite">${esc(res.count)}</p>
 <h2 class="vh">Recommendations</h2>
 <div id="results">${res.html}</div>`
   };
@@ -676,12 +755,21 @@ function bindPlaybook(root, api) {
     const r = playbookResults();
     root.querySelector('#result-count').textContent = r.count;
     root.querySelector('#results').innerHTML = r.html;
+    const n = countActiveRecs(state.recFilters);
+    root.querySelector('#rec-count').textContent = n ? ` (${n})` : '';
+    root.querySelector('#rec-clear').hidden = n === 0;
   });
   form.addEventListener('submit', (e) => e.preventDefault());
+  const toggle = root.querySelector('#rec-toggle');
+  toggle.addEventListener('click', () => {
+    recPanelOpen = !recPanelOpen;
+    form.classList.toggle('open', recPanelOpen);
+    toggle.setAttribute('aria-expanded', String(recPanelOpen));
+  });
   root.addEventListener('click', (e) => {
     if (!e.target.closest('[data-action="clear-rec-filters"]')) return;
     state.recFilters = defaultRecFilters();
-    api.refresh({ focusSelector: '#p-horizon' });
+    api.refresh({ focusSelector: '#p-sort' });
   });
 }
 
@@ -729,7 +817,7 @@ function renderWatchlist() {
   </div>
 </div>
 <section aria-labelledby="h-wt"><h2 id="h-wt">Watched trends</h2><ul class="grid">${trends.map((t) => trendCard(t, ctx)).join('')}</ul></section>
-<section aria-labelledby="h-wr"><h2 id="h-wr">Recommendations for watched trends</h2><ol class="grid">${recs.map((r) => recCard(r, ctx)).join('')}</ol></section>`
+<section aria-labelledby="h-wr"><h2 id="h-wr">Recommendations for watched trends</h2><ol class="rec-list">${recs.map((r) => recCard(r, ctx)).join('')}</ol></section>`
   };
 }
 
@@ -785,17 +873,31 @@ function bindWatchlist(root, api) {
 
 /* ---- js/views/feed.js ---- */
 // views/feed.js - "Latest" news feed from data/feed.json (written on a schedule by scripts/fetch-feed.mjs).
-// The page re-fetches the file every REFRESH_MS while it is open and visible, and again when the tab becomes visible.
-// Needs http(s): browsers block fetch() on file://, in which case a short explanation is shown instead.
+// Items are grouped by age, items published since your previous visit are marked New, and the source filter is a
+// set of chips with counts. The page re-fetches the file every REFRESH_MS while it is open and visible, and again
+// when the tab becomes visible. Needs http(s): browsers block fetch() on file://, so a short explanation is shown.
+
 
 
 
 const REFRESH_MS = 15 * 60 * 1000;
 const STALE_HOURS = 48;
+const FEED_SEEN_KEY = 'iamradar.feedseen.v1';
 
 const feed = { data: null, error: '', loadedAt: 0, loading: false, sourceFilter: '' };
 let timer = null;
 let boundRoot = null;
+let baseline = null; // ms timestamp of the previous visit, read once per page session (0 = first visit)
+let chipSig = '';
+
+/** Reads the previous visit time once per page session, then records this visit. All storage access is guarded. */
+function recordVisit() {
+  if (baseline !== null) return;
+  let prev = 0;
+  try { const v = globalThis.localStorage.getItem(FEED_SEEN_KEY); prev = v ? Date.parse(v) || 0 : 0; } catch { /* storage unavailable */ }
+  baseline = prev;
+  try { globalThis.localStorage.setItem(FEED_SEEN_KEY, new Date().toISOString()); } catch { /* storage unavailable */ }
+}
 
 /** Pure: whole hours between an ISO timestamp and `now` (ms); Infinity if unparseable. */
 function hoursSince(iso, now) {
@@ -803,55 +905,103 @@ function hoursSince(iso, now) {
   return Number.isNaN(t) ? Infinity : (now - t) / 3600000;
 }
 
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/** "30 Oct 2026" from an ISO timestamp (UTC), or '' if unparseable. */
 function fmtDate(iso) {
-  return iso ? iso.slice(0, 10) : '';
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return '';
+  const d = new Date(t);
+  return `${d.getUTCDate()} ${MON[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }
 
 function itemHtml(i) {
   const url = safeUrl(i.link);
-  const title = url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(i.title)}</a>` : esc(i.title);
-  return `<li class="card">
+  const title = url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(i.title)}<span class="vh"> (opens in a new tab)</span></a>` : esc(i.title);
+  const isNew = isNewItem(i, baseline || 0);
+  const when = i.published ? `<time datetime="${esc(i.published)}">${esc(fmtDate(i.published))}</time>` : '';
+  return `<li class="card feed-item">
   <h3 class="card-title">${title}</h3>
-  <p class="small muted">${esc(i.source)}${i.published ? ` &middot; <time datetime="${esc(i.published)}">${esc(fmtDate(i.published))}</time>` : ''}</p>
-  ${i.summary ? `<p>${esc(i.summary)}</p>` : ''}
+  <p class="small muted feed-meta">${isNew ? '<span class="badge badge-new">New</span> ' : ''}${esc(i.source)}${when ? ` &middot; ${when}` : ''}</p>
+  ${i.summary ? `<p class="feed-summary">${esc(i.summary)}</p>` : ''}
 </li>`;
+}
+
+function skeletonHtml() {
+  const card = '<li class="card skel" aria-hidden="true"><span class="skel-line skel-title"></span><span class="skel-line skel-meta"></span><span class="skel-line"></span><span class="skel-line skel-short"></span></li>';
+  return `<ul class="grid">${card.repeat(6)}</ul>`;
 }
 
 function bodyHtml() {
   if (!feed.data) {
     if (feed.error) return `<div class="notice" role="note">${esc(feed.error)}</div>`;
-    return '<p class="muted">Loading the latest items&hellip;</p>';
+    return skeletonHtml();
   }
   const items = feed.data.items.filter((i) => !feed.sourceFilter || i.sourceId === feed.sourceFilter);
   const stale = hoursSince(feed.data.generatedAt, Date.now()) > STALE_HOURS;
   const failed = (feed.data.sources || []).filter((s) => !s.ok);
   const staleNote = stale ? `<div class="notice" role="note">The feed has not refreshed since ${esc(fmtDate(feed.data.generatedAt))}; items may be out of date.</div>` : '';
   const failNote = failed.length ? `<p class="small muted">Showing earlier items for: ${esc(failed.map((s) => s.name).join(', '))} (could not be reached at the last refresh).</p>` : '';
-  const list = items.length ? `<ul class="grid">${items.map(itemHtml).join('')}</ul>` : emptyState('No items for this source yet.');
-  return `${staleNote}${failNote}${list}`;
+  if (!items.length) return `${staleNote}${failNote}${emptyState('No items for this source yet.')}`;
+  const groups = groupFeedItems(items).map((g) => `<section class="feed-group" aria-labelledby="g-${esc(g.key)}">
+  <h2 id="g-${esc(g.key)}" class="group-title">${esc(g.label)} <span class="muted small">(${g.items.length})</span></h2>
+  <ul class="grid">${g.items.map(itemHtml).join('')}</ul>
+</section>`).join('');
+  return `${staleNote}${failNote}${groups}`;
 }
 
 function statusText() {
+  if (feed.loading && !feed.data) return 'Loading the latest items…';
   if (!feed.data) return '';
-  return `Feed generated ${feed.data.generatedAt.slice(0, 16).replace('T', ' ')} UTC. This page checks for updates every ${REFRESH_MS / 60000} minutes.`;
+  const fresh = baseline ? countNewItems(feed.data.items, baseline) : 0;
+  const newPart = baseline ? (fresh ? ` ${fresh} new since your last visit.` : ' Nothing new since your last visit.') : '';
+  return `Feed generated ${feed.data.generatedAt.slice(0, 16).replace('T', ' ')} UTC. This page checks for updates every ${REFRESH_MS / 60000} minutes.${newPart}`;
+}
+
+function chipItems() {
+  if (!feed.data) return [];
+  return feed.data.sources
+    .map((s) => ({ id: s.id, label: `${s.name} (${feed.data.items.filter((i) => i.sourceId === s.id).length})` }))
+    .filter((c) => !c.label.endsWith('(0)'));
+}
+
+function chipsHtml() {
+  const total = feed.data ? feed.data.items.length : 0;
+  return chipRadios('source', 'Source', chipItems(), feed.sourceFilter, `All (${total})`);
+}
+
+function paintChips(force) {
+  const box = boundRoot && boundRoot.querySelector('#feed-chips');
+  if (!box) return;
+  const sig = feed.data ? JSON.stringify([chipItems(), feed.data.items.length, feed.sourceFilter]) : '';
+  if (!force && sig === chipSig) return; // unchanged: leave the controls (and their focus) alone
+  chipSig = sig;
+  box.innerHTML = feed.data ? chipsHtml() : '';
+}
+
+function paintBody() {
+  if (!boundRoot || !boundRoot.isConnected) return;
+  const body = boundRoot.querySelector('#feed-body');
+  if (body) { body.innerHTML = bodyHtml(); body.setAttribute('aria-busy', String(feed.loading && !feed.data)); }
 }
 
 function paint() {
   if (!boundRoot || !boundRoot.isConnected) return;
-  const body = boundRoot.querySelector('#feed-body');
-  if (body) body.innerHTML = bodyHtml();
+  paintBody();
+  paintChips(false);
   const st = boundRoot.querySelector('#feed-status');
   if (st) st.textContent = statusText();
-  const sel = boundRoot.querySelector('#feed-source');
-  if (sel && feed.data && sel.options.length <= 1) {
-    sel.innerHTML = `<option value="">All sources</option>${feed.data.sources.map((s) => `<option value="${esc(s.id)}"${s.id === feed.sourceFilter ? ' selected' : ''}>${esc(s.name)}</option>`).join('')}`;
-  }
+  const btn = boundRoot.querySelector('#feed-refresh');
+  if (btn) { btn.disabled = feed.loading; btn.textContent = feed.loading ? 'Refreshing…' : 'Refresh now'; }
 }
 
 async function loadFeed() {
   if (feed.loading) return;
   feed.loading = true;
+  paint();
   try {
+    // Browsers block fetch() on file://, and would log a console error for it; do not even try.
+    if (location.protocol === 'file:') throw new Error('file protocol');
     const res = await fetch(`data/feed.json?t=${Date.now()}`, { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
@@ -885,34 +1035,43 @@ function startTimer() {
 }
 
 function renderFeed() {
-  const sources = feed.data ? feed.data.sources : [];
   return {
     title: 'Latest',
     html: `<h1 tabindex="-1">Latest from the field</h1>
 <p class="lead">Headlines from official identity and security sources, refreshed automatically. These are links to the original publishers, not summaries we have verified.</p>
-<div class="toolbar">
-  <label for="feed-source">Source</label>
-  <select id="feed-source"><option value="">All sources</option>${sources.map((s) => `<option value="${esc(s.id)}"${s.id === feed.sourceFilter ? ' selected' : ''}>${esc(s.name)}</option>`).join('')}</select>
-  <button type="button" class="btn" id="feed-refresh">Refresh now</button>
-  <span id="feed-status" class="small muted" role="status">${esc(statusText())}</span>
-</div>
-<div id="feed-body">${bodyHtml()}</div>`
+<form class="feed-controls" id="feed-form" aria-label="Filter the feed" autocomplete="off">
+  <div id="feed-chips">${feed.data ? chipsHtml() : ''}</div>
+  <div class="feed-actions"><button type="button" class="btn btn-compact" id="feed-refresh">Refresh now</button></div>
+</form>
+<p id="feed-status" class="small muted" role="status">${esc(statusText())}</p>
+<div id="feed-body" aria-busy="${!feed.data && !feed.error}">${bodyHtml()}</div>`
   };
 }
 
 function bindFeed(root) {
+  recordVisit();
   boundRoot = root;
-  root.querySelector('#feed-source').addEventListener('change', (e) => { feed.sourceFilter = e.target.value; paint(); });
+  chipSig = feed.data ? JSON.stringify([chipItems(), feed.data.items.length, feed.sourceFilter]) : '';
+  root.querySelector('#feed-form').addEventListener('submit', (e) => e.preventDefault());
+  root.querySelector('#feed-form').addEventListener('change', (e) => {
+    if (e.target.name !== 'source') return;
+    feed.sourceFilter = e.target.value;
+    chipSig = JSON.stringify([chipItems(), feed.data.items.length, feed.sourceFilter]);
+    paintBody();
+  });
   root.querySelector('#feed-refresh').addEventListener('click', () => loadFeed());
   if (!feed.data || Date.now() - feed.loadedAt > REFRESH_MS) loadFeed();
+  else paint();
   startTimer();
 }
 
 // Stop polling when the user leaves the Feed view, and catch up when a hidden tab becomes visible again.
-window.addEventListener('hashchange', () => { if (!/^#\/feed\/?$/.test(location.hash)) stopTimer(); });
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && timer && Date.now() - feed.loadedAt > REFRESH_MS) loadFeed();
-});
+if (typeof window !== 'undefined') {
+  window.addEventListener('hashchange', () => { if (!/^#\/feed\/?$/.test(location.hash)) stopTimer(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && timer && Date.now() - feed.loadedAt > REFRESH_MS) loadFeed();
+  });
+}
 
 /* ---- js/views/about.js ---- */
 // views/about.js - methodology, scales (rendered from taxonomy.json), priority score, data policy and contribution notes.
@@ -929,7 +1088,8 @@ function renderAbout() {
   const m = state.meta;
   return {
     title: 'About',
-    html: `<h1 tabindex="-1">About this radar</h1>
+    html: `<div class="prose">
+<h1 tabindex="-1">About this radar</h1>
 <section aria-labelledby="h-method"><h2 id="h-method">Methodology</h2>
   <p>Trends are curated by hand from public standards, government publications and primary documentation. Maturity, impact and momentum are editorial judgments, not measurements. Each trend lists its sources and the date they were accessed.</p>
   <p>Dataset version <strong>${esc(m.datasetVersion)}</strong>, last updated <strong>${esc(m.lastUpdated)}</strong>. Items not updated for more than 180 days show a "May be stale" hint.</p></section>
@@ -946,10 +1106,11 @@ function renderAbout() {
     <li>No unsourced statistics. Where a claim could not be confirmed, the item is flagged "Needs verification" with notes on what to check.</li>
     <li>Source types are labelled (standard, government, vendor, analyst, research, news). Vendor material is not used to make recommendations vendor-specific.</li>
     <li>${esc(m.disclaimer)}</li>
-    <li>Everything stays in your browser. The site makes no network requests, and your watchlist is stored only in this browser's local storage.</li>
+    <li>Everything stays in your browser. The site loads only its own files and makes no requests to third parties. Your watchlist, filters and the time of your last visit to the Latest page are stored only in this browser's local storage.</li>
   </ul></section>
 <section aria-labelledby="h-contrib"><h2 id="h-contrib">Contributing data</h2>
-  <p>Data lives in the <code>data/</code> folder as JSON. Edit <code>trends.json</code> or <code>recommendations.json</code>, run <code>node scripts/validate-data.mjs</code>, then <code>node scripts/build-data.mjs</code> to regenerate the bundle used when the site is opened directly from disk. See <code>docs/CONTRIBUTING-DATA.md</code> for details.</p></section>`
+  <p>Data lives in the <code>data/</code> folder as JSON. Edit <code>trends.json</code> or <code>recommendations.json</code>, run <code>node scripts/validate-data.mjs</code>, then <code>node scripts/build-data.mjs</code> to regenerate the bundle used when the site is opened directly from disk. See <code>docs/CONTRIBUTING-DATA.md</code> for details.</p></section>
+</div>`
   };
 }
 
@@ -995,6 +1156,7 @@ function draw(opts = {}) {
   document.title = `${result.title} - IAM Trend Radar`;
   root.innerHTML = '<div class="view"></div>';
   const container = root.firstElementChild;
+  if (opts.enter) container.classList.add('enter');
   container.innerHTML = result.html;
   markNav(route);
   const api = { refresh: (o) => refreshCurrent(o || {}) };
@@ -1017,7 +1179,7 @@ function onRoute(isInitial) {
   if (current && currentKey !== null) scrollMemory.set(currentKey, window.scrollY);
   current.route = parseRoute(window.location.hash);
   currentKey = routeKey(current.route);
-  const container = draw();
+  const container = draw({ enter: !isInitial });
   window.scrollTo(0, scrollMemory.get(currentKey) || 0);
   if (!isInitial) {
     const h1 = container.querySelector('h1');

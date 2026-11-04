@@ -89,3 +89,7 @@ No license has been chosen yet.
 - **Latest feed (`#/feed`)**: headlines from official feeds (FIDO Alliance, OpenID Foundation, NIST, CISA, W3C), written to `data/feed.json` by `node scripts/fetch-feed.mjs`. Broad feeds (NIST, CISA, W3C) are filtered to identity-related items. If a source is down, its previous items are kept. The page re-checks the file every 15 minutes while open. The feed needs http(s); it does not load when `index.html` is opened from disk.
 - **Public hosting**: `.github/workflows/pages.yml` publishes only `index.html`, `css/`, `dist/` and `data/` to GitHub Pages on every push to `main`, manually, and every 6 hours (refreshing the feed each time). Tests must pass before it deploys. The refreshed feed is deployed but not committed.
 - **Before going public**: five trends are flagged `needsVerification`; review them (see `docs/CONTRIBUTING-DATA.md`).
+
+## Fonts
+
+The site uses Hanken Grotesk (variable, Latin subset), self-hosted in `css/fonts/` under the SIL Open Font License; the license text is `css/fonts/HankenGrotesk-OFL.txt`. No fonts are loaded from third parties.

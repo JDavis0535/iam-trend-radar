@@ -1,4 +1,4 @@
-// views/dashboard.js - stat tiles, maturity x impact landscape and trend card grid, driven by combined filters, search, sort and a live result count.
+// views/dashboard.js - a summary line, the maturity x impact landscape and trend card grid, driven by combined filters, search, sort and a live result count.
 // Filters live in store.state.filters (persisted), so they survive navigation to a trend and back.
 
 import { state, makeCtx, saveFilters, resetFilters } from '../store.js';
@@ -42,13 +42,7 @@ export function renderDashboard() {
     title: 'Dashboard',
     html: `<h1 tabindex="-1">What is changing in identity and access</h1>
 <p class="lead">How mature and impactful each trend is, and what to do about it.</p>
-<ul class="tiles" aria-label="Dataset summary">
-  <li class="tile"><strong>${state.trends.length}</strong><span>Trends</span></li>
-  <li class="tile"><strong>${state.recommendations.length}</strong><span>Recommendations</span></li>
-  <li class="tile"><strong>${rising}</strong><span>Rising momentum</span></li>
-  <li class="tile"><strong>${esc(state.meta.lastUpdated)}</strong><span>Data updated</span></li>${flagged ? `
-  <li class="tile tile-warn"><strong>${flagged}</strong><span>Need verification</span></li>` : ''}
-</ul>
+<p class="summary-line" aria-label="Dataset summary"><strong>${state.trends.length}</strong> trends, <strong>${state.recommendations.length}</strong> recommendations, <strong>${rising}</strong> with rising momentum${flagged ? `, <strong>${flagged}</strong> needing verification` : ''}. Data updated <time datetime="${esc(state.meta.lastUpdated)}">${esc(state.meta.lastUpdated)}</time>.</p>
 <form class="dash-filters${panelOpen ? ' open' : ''}" id="filter-form" role="search" aria-label="Filter trends" autocomplete="off">
   <div class="filter-bar">
     <div class="bar-search"><label for="f-text" class="vh">Search trends</label><input type="search" id="f-text" name="text" value="${esc(f.text)}" placeholder="Search title, summary, standard"></div>
@@ -61,7 +55,7 @@ export function renderDashboard() {
     ${chipRadios('maturity', 'Maturity', tx.maturity, f.maturity, 'All')}
     ${chipRadios('impact', 'Impact', tx.impact, f.impact, 'All')}
     ${chipRadios('momentum', 'Momentum', tx.momentum, f.momentum, 'All')}
-    <div class="panel-actions">${chipCheck('watchOnly', 'f-watch', '★ Watchlist only', f.watchOnly)}<button type="button" class="btn btn-compact" id="clear-filters" data-action="clear-filters"${sum.any ? '' : ' hidden'}>Clear filters</button></div>
+    <div class="panel-actions">${chipCheck('watchOnly', 'f-watch', 'Watchlist only', f.watchOnly, 'star')}<button type="button" class="btn btn-compact" id="clear-filters" data-action="clear-filters"${sum.any ? '' : ' hidden'}>Clear filters</button></div>
   </div>
 </form>
 <section class="landscape" id="landscape" aria-labelledby="h-landscape"${res.list.length ? '' : ' hidden'}>

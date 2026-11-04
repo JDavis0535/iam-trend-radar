@@ -8,3 +8,6 @@ node_modules/
 docs/agent-teams-*.md
 docs/iam-site/
 docs/README.md
+
+# Local agent tooling (skills installed into the project), not part of the published site
+.claude/

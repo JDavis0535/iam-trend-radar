@@ -39,6 +39,7 @@ function draw(opts = {}) {
   document.title = `${result.title} - IAM Trend Radar`;
   root.innerHTML = '<div class="view"></div>';
   const container = root.firstElementChild;
+  if (opts.enter) container.classList.add('enter');
   container.innerHTML = result.html;
   markNav(route);
   const api = { refresh: (o) => refreshCurrent(o || {}) };
@@ -61,7 +62,7 @@ function onRoute(isInitial) {
   if (current && currentKey !== null) scrollMemory.set(currentKey, window.scrollY);
   current.route = parseRoute(window.location.hash);
   currentKey = routeKey(current.route);
-  const container = draw();
+  const container = draw({ enter: !isInitial });
   window.scrollTo(0, scrollMemory.get(currentKey) || 0);
   if (!isInitial) {
     const h1 = container.querySelector('h1');

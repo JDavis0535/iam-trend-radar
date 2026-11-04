@@ -101,11 +101,11 @@ async function main() {
   const q = await ev('[...document.querySelectorAll("#results .card")].map(c=>c.textContent)');
   check('quick wins only low effort + high/transformative', q.length > 0 && q.every((t) => /Effort: Low/.test(t) && /Impact: (High|Transformative)/.test(t)), q.length + ' shown');
   await ev('document.querySelector("#rec-form [data-action=clear-rec-filters]").click()'); await sleep(150);
-  check('playbook clear: focus moves to first filter', (await ev('document.activeElement.id')) === 'p-horizon');
+  check('playbook clear: focus moves to first filter', (await ev('document.activeElement.id')) === 'p-sort');
 
   // --- watchlist view + export panel (Builder-flagged risk)
   await go('#/watchlist');
-  check('watchlist shows watched trend', (await ev('document.querySelectorAll(".grid .card").length')) >= 2);
+  check('watchlist shows watched trend and its recommendations', (await ev('document.querySelectorAll(".grid .card").length')) >= 1 && (await ev('document.querySelectorAll(".rec-list .card").length')) >= 1);
   await ev('document.querySelector("[data-action=export]").click()'); await sleep(150);
   check('export panel visible, textarea focused, has Markdown', (await ev('!document.getElementById("export-panel").hidden')) && (await ev('document.activeElement.id')) === 'export-text' && (await ev('document.getElementById("export-text").value')).startsWith('# IAM Trend Radar watchlist'));
   // unwatch from watchlist view: re-render must keep panel? record behaviour
@@ -121,7 +121,7 @@ async function main() {
   results.push('INFO  after un-watching on watchlist page: export panel hidden=' + await ev('(document.getElementById("export-panel")||{hidden:"n/a"}).hidden') + ', activeElement=' + await ev('document.activeElement.tagName+":"+(document.activeElement.id||document.activeElement.dataset.action||"")'));
 
   // --- accessibility basics on every route
-  for (const h of ['#/', '#/trend/itdr', '#/playbook', '#/watchlist', '#/about', '#/zzz']) {
+  for (const h of ['#/', '#/trend/itdr', '#/playbook', '#/feed', '#/watchlist', '#/about', '#/zzz']) {
     await go(h);
     const a = await ev(`(()=>{
       const bad=[];
@@ -143,7 +143,8 @@ async function main() {
   // --- contrast (computed colors vs resolved backgrounds) in light and dark
   for (const scheme of ['light', 'dark']) {
     await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: scheme }] });
-    await go('#/'); await sleep(150);
+    for (const route of (mode === 'http' ? ['#/', '#/feed'] : ['#/'])) {
+    await go(route); await sleep(route === '#/feed' ? 700 : 150);
     const c = await ev(`(()=>{
       const parse=s=>{const m=s.match(/rgba?\\(([^)]+)\\)/); if(!m) return null; const p=m[1].split(',').map(Number); return {r:p[0],g:p[1],b:p[2],a:p.length>3?p[3]:1};};
       const lum=c=>{const f=v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4)}; return 0.2126*f(c.r)+0.7152*f(c.g)+0.0722*f(c.b)};
@@ -151,14 +152,15 @@ async function main() {
       const worst=[]; const seen=new Set();
       document.querySelectorAll('body *').forEach(e=>{ if(!e.childNodes.length||![...e.childNodes].some(n=>n.nodeType===3&&n.textContent.trim())) return; const cs=getComputedStyle(e); if(cs.visibility==='hidden'||cs.display==='none') return; const fg=parse(cs.color), bg=bgOf(e); if(!fg) return; const L1=lum(fg),L2=lum(bg); const ratio=(Math.max(L1,L2)+0.05)/(Math.min(L1,L2)+0.05); const key=e.tagName+'.'+e.className+'|'+cs.color+'|'+JSON.stringify(bg); if(seen.has(key)) return; seen.add(key); const size=parseFloat(cs.fontSize), bold=+cs.fontWeight>=700; const need=(size>=24||(size>=18.66&&bold))?3:4.5; if(ratio<need) worst.push(e.tagName+'.'+e.className+' '+ratio.toFixed(2)+' need '+need); });
       return worst; })()`);
-    check(`contrast >= 4.5:1 (${scheme})`, c.length === 0, c.slice(0, 6).join('; '));
+    check(`contrast >= 4.5:1 (${scheme}) ${route}`, c.length === 0, c.slice(0, 6).join('; '));
+    }
   }
   await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'light' }] });
 
   // --- responsive: horizontal overflow at 360 / 768 / 1280
   for (const w of [360, 768, 1280]) {
     await send('Emulation.setDeviceMetricsOverride', { width: w, height: 900, deviceScaleFactor: 1, mobile: w < 700 });
-    for (const h of ['#/', '#/trend/itdr', '#/playbook', '#/about']) {
+    for (const h of ['#/', '#/trend/itdr', '#/playbook', '#/feed', '#/about']) {
       await go(h); await sleep(100);
       const o = await ev('document.documentElement.scrollWidth - document.documentElement.clientWidth');
       check(`no horizontal scroll ${w}px ${h}`, o <= 0, 'overflow=' + o);
@@ -186,6 +188,34 @@ async function main() {
   await ev(`document.getElementById('clear-filters').click()`); await sleep(200);
   check('clear: count label and button reset', (await ev(`document.getElementById('filter-toggle').textContent.trim()`)) === 'Filters' && (await ev(`getComputedStyle(document.getElementById('clear-filters')).display`)) === 'none');
   await send('Emulation.clearDeviceMetricsOverride');
+
+  // --- Latest page: file:// explains itself; http(s) shows grouped items, source chips, and "new since your last visit"
+  if (mode === 'file') {
+    await go('#/feed'); await sleep(400);
+    check('feed (file://): explains that http(s) is needed, no crash', (await ev('document.body.textContent')).includes('needs the site to be served over http'));
+  } else {
+    await ev(`localStorage.removeItem('iamradar.feedseen.v1')`);
+    await nav(base + '?r=feed1#/feed'); await sleep(900);
+    check('feed: items render grouped under headings', (await ev(`document.querySelectorAll('.feed-group .group-title').length`)) >= 1 && (await ev(`document.querySelectorAll('.feed-item').length`)) >= 10);
+    check('feed: first visit marks nothing as new', (await ev(`document.querySelectorAll('.badge-new').length`)) === 0 && !(await ev(`document.getElementById('feed-status').textContent`)).includes('since your last visit'));
+    check('feed: skeleton placeholders are gone after load', (await ev(`document.querySelectorAll('.skel').length`)) === 0 && (await ev(`document.getElementById('feed-body').getAttribute('aria-busy')`)) === 'false');
+    check('feed: this visit was recorded', (await ev(`localStorage.getItem('iamradar.feedseen.v1')`)) !== null);
+    const total = await ev(`document.querySelectorAll('.feed-item').length`);
+    check('feed: source chips show counts and sum to the total', (await ev(`(()=>{const l=[...document.querySelectorAll('#feed-chips input[name=source]')].slice(1).map(i=>{const x=i.nextElementSibling.textContent;return Number(x.slice(x.lastIndexOf('(')+1,-1));});return l.length>=2&&l.every(n=>n>0)&&l.reduce((a,b)=>a+b,0)===${total}})()`)) === true);
+    await ev(`document.querySelectorAll('#feed-chips input[name=source]')[1].click()`); await sleep(150);
+    const filtered = await ev(`document.querySelectorAll('.feed-item').length`);
+    check('feed: choosing a source chip filters the list (chips stay put)', filtered > 0 && filtered < total && (await ev(`document.querySelectorAll('#feed-chips input[name=source]').length`)) >= 3);
+    await ev(`document.querySelectorAll('#feed-chips input[name=source]')[0].click()`); await sleep(150);
+    check('feed: All chip restores the full list', (await ev(`document.querySelectorAll('.feed-item').length`)) === total);
+    check('feed: links are https, open in new tab with noopener', (await ev(`[...document.querySelectorAll('.feed-item a')].every(a=>a.href.startsWith('https://')&&a.target==='_blank'&&/noopener/.test(a.rel))`)) === true);
+    await ev(`localStorage.setItem('iamradar.feedseen.v1','2000-01-01T00:00:00.000Z')`);
+    await nav(base + '?r=feed2#/feed'); await sleep(900);
+    check('feed: older previous visit marks items New and says how many', (await ev(`document.querySelectorAll('.badge-new').length`)) === total && /\d+ new since your last visit/.test(await ev(`document.getElementById('feed-status').textContent`)));
+    await ev(`localStorage.setItem('iamradar.feedseen.v1','2999-01-01T00:00:00.000Z')`);
+    await nav(base + '?r=feed3#/feed'); await sleep(900);
+    check('feed: nothing newer than the last visit -> no badges, says so', (await ev(`document.querySelectorAll('.badge-new').length`)) === 0 && (await ev(`document.getElementById('feed-status').textContent`)).includes('Nothing new since your last visit'));
+    await ev(`localStorage.removeItem('iamradar.feedseen.v1')`);
+  }
 
   // --- external requests
   const ext = await ev('performance.getEntriesByType("resource").map(r=>r.name).filter(n=>!n.startsWith(location.origin)&&!n.startsWith("file:"))');

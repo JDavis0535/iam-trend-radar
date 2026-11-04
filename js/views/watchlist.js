@@ -41,7 +41,7 @@ export function renderWatchlist() {
   </div>
 </div>
 <section aria-labelledby="h-wt"><h2 id="h-wt">Watched trends</h2><ul class="grid">${trends.map((t) => trendCard(t, ctx)).join('')}</ul></section>
-<section aria-labelledby="h-wr"><h2 id="h-wr">Recommendations for watched trends</h2><ol class="grid">${recs.map((r) => recCard(r, ctx)).join('')}</ol></section>`
+<section aria-labelledby="h-wr"><h2 id="h-wr">Recommendations for watched trends</h2><ol class="rec-list">${recs.map((r) => recCard(r, ctx)).join('')}</ol></section>`
   };
 }
 

@@ -20,11 +20,31 @@ export function labelOf(list, id) {
   return hit ? hit.label : String(id ?? '');
 }
 
-const GLYPHS = {
-  maturity: { emerging: '◔', growing: '◑', mainstream: '◕', established: '●' },
-  momentum: { rising: '↗', steady: '→', cooling: '↘' },
-  horizon: { now: '▶', next: '▷', later: '○' }
+// Icons are drawn as inline SVG on one 16px grid with a 1.75 stroke, not as Unicode glyphs, which change shape from
+// font to font. The paths are static strings and nothing from the data ever reaches them. Names double as the
+// taxonomy ids for maturity, momentum and horizon, so a badge looks its icon up by id.
+const RING = '<circle cx="8" cy="8" r="6"/>';
+const ICON_PATHS = {
+  emerging: `${RING}<path d="M8 8V3A5 5 0 0 1 13 8z" fill="currentColor" stroke="none"/>`,
+  growing: `${RING}<path d="M8 8V3A5 5 0 0 1 8 13z" fill="currentColor" stroke="none"/>`,
+  mainstream: `${RING}<path d="M8 8V3A5 5 0 1 1 3 8z" fill="currentColor" stroke="none"/>`,
+  established: `${RING}<circle cx="8" cy="8" r="3.6" fill="currentColor" stroke="none"/>`,
+  rising: '<path d="M4.5 11.5l7-7M5.5 4.5h6v6"/>',
+  steady: '<path d="M3 8h9.5M9 4.5L12.5 8 9 11.5"/>',
+  cooling: '<path d="M4.5 4.5l7 7M5.5 11.5h6v-6"/>',
+  now: '<circle cx="3" cy="8" r="1.15" fill="currentColor"/><circle cx="8" cy="8" r="1.15"/><circle cx="13" cy="8" r="1.15"/>',
+  next: '<circle cx="3" cy="8" r="1.15"/><circle cx="8" cy="8" r="1.15" fill="currentColor"/><circle cx="13" cy="8" r="1.15"/>',
+  later: '<circle cx="3" cy="8" r="1.15"/><circle cx="8" cy="8" r="1.15"/><circle cx="13" cy="8" r="1.15" fill="currentColor"/>',
+  star: '<path d="M8 1.9l1.85 3.9 4.25.55-3.1 2.95.8 4.25L8 11.45 4.2 13.55l.8-4.25-3.1-2.95 4.25-.55z"/>',
+  warn: '<path d="M8 2.2l6.2 11H1.8z"/><path d="M8 6.4v3.2M8 11.6v.1"/>',
+  back: '<path d="M10 3.5L5.5 8l4.5 4.5"/>'
 };
+
+/** Inline SVG icon by name; '' for an unknown name. Always decorative (aria-hidden). */
+export function icon(name, cls = '') {
+  if (!Object.prototype.hasOwnProperty.call(ICON_PATHS, name)) return '';
+  return `<svg class="ico${cls ? ` ${esc(cls)}` : ''}" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${ICON_PATHS[name]}</svg>`;
+}
 
 // Impact and effort are drawn as small CSS meters (filled bars) rather than block characters, which render
 // inconsistently across fonts. level = filled bars, total = bars drawn.
@@ -38,10 +58,10 @@ function meter(kind, id) {
 
 const KIND_LABELS = { maturity: 'Maturity', impact: 'Impact', momentum: 'Momentum', horizon: 'Horizon', effort: 'Effort' };
 
-/** Badge with a glyph, a visible text label and a screen-reader prefix. Never color-only. */
+/** Badge with a drawn icon or meter, a visible text label and a screen-reader prefix. Never color-only. */
 export function badge(kind, id, taxonomy) {
   const text = labelOf(taxonomy && taxonomy[kind], id);
-  const glyph = METER[kind] ? meter(kind, id) : esc((GLYPHS[kind] && GLYPHS[kind][id]) || '•');
+  const glyph = METER[kind] ? meter(kind, id) : icon(id);
   return `<span class="badge badge-${esc(kind)} badge-v-${esc(id)}"><span aria-hidden="true">${glyph}</span> <span class="vh">${esc(KIND_LABELS[kind] || kind)}: </span>${esc(text)}</span>`;
 }
 
@@ -51,11 +71,11 @@ export function categoryChips(item, taxonomy) {
 
 export function verificationBadge(item) {
   if (!item.needsVerification) return '';
-  return `<span class="badge badge-warn"><span aria-hidden="true">⚠</span> Needs verification</span>`;
+  return `<span class="badge badge-warn">${icon('warn')} Needs verification</span>`;
 }
 
 export function watchButton(id, watched, title) {
-  return `<button type="button" class="btn btn-watch" data-watch="${esc(id)}" aria-pressed="${watched ? 'true' : 'false'}" aria-label="Watch ${esc(title)}">${watched ? '★ Watching' : '☆ Watch'}</button>`;
+  return `<button type="button" class="btn btn-watch" data-watch="${esc(id)}" aria-pressed="${watched ? 'true' : 'false'}" aria-label="Watch ${esc(title)}">${icon('star')}<span>${watched ? 'Watching' : 'Watch'}</span></button>`;
 }
 
 export function dateLine(item, stale) {
@@ -86,7 +106,7 @@ export function recCard(r, ctx) {
     return `<li>${dep ? esc(dep.title) : esc(d)}</li>`;
   }).join('');
   const list = (arr) => (arr || []).map((s) => `<li>${esc(s)}</li>`).join('');
-  return `<li class="card">
+  return `<li class="card rec">
   <h3 class="card-title">${esc(r.title)}</h3>
   <p class="badges">${badge('horizon', r.horizon, tx)} ${badge('effort', r.effort, tx)} ${badge('impact', r.impact, tx)} <span class="badge"><span class="vh">Priority score: </span>Priority ${ctx.score(r)}</span></p>
   <p>${esc(r.description)}</p>
@@ -116,7 +136,7 @@ export function landscape(trends, tx) {
   if (!trends.length) return '';
   const cols = tx.maturity;
   const rows = [...tx.impact].reverse();
-  const dot = (t) => `<a class="dot dot-${esc(t.momentum)}" href="#/trend/${encodeURIComponent(t.id)}"><span aria-hidden="true">${esc((GLYPHS.momentum && GLYPHS.momentum[t.momentum]) || '•')}</span> ${esc(t.title)}<span class="vh"> (Momentum: ${esc(labelOf(tx.momentum, t.momentum))})</span></a>`;
+  const dot = (t) => `<a class="dot dot-${esc(t.momentum)}" href="#/trend/${encodeURIComponent(t.id)}">${icon(t.momentum)} ${esc(t.title)}<span class="vh"> (Momentum: ${esc(labelOf(tx.momentum, t.momentum))})</span></a>`;
   const body = rows.map((imp) => {
     const cells = cols.map((mat) => {
       const ts = trends.filter((t) => t.maturity === mat.id && t.impact === imp.id);
@@ -135,8 +155,8 @@ export function chipRadios(name, legend, items, selected, allLabel) {
 }
 
 /** Single checkbox drawn as a toggle chip. */
-export function chipCheck(name, id, label, checked) {
-  return `<label class="opt"><input type="checkbox" id="${esc(id)}" name="${esc(name)}"${checked ? ' checked' : ''}><span>${esc(label)}</span></label>`;
+export function chipCheck(name, id, label, checked, iconName) {
+  return `<label class="opt"><input type="checkbox" id="${esc(id)}" name="${esc(name)}"${checked ? ' checked' : ''}><span>${iconName ? icon(iconName) : ''}${esc(label)}</span></label>`;
 }
 
 export function emptyState(message, actionHtml) {
