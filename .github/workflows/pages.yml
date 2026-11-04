@@ -1,0 +1,48 @@
+# Builds and publishes the site to GitHub Pages, and refreshes data/feed.json from the official RSS/Atom
+# feeds on a schedule. The refreshed feed is deployed but not committed, so the repo history stays clean.
+name: Publish site
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 */6 * * *'   # every 6 hours (UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Refresh feed (a failing source keeps its previous items)
+        run: node scripts/fetch-feed.mjs
+      - name: Validate data and rebuild bundles
+        run: node scripts/build-data.mjs
+      - name: Run tests
+        run: node --test
+      - name: Stage site files only
+        run: |
+          mkdir _site
+          cp -r index.html css dist data _site/
+          touch _site/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

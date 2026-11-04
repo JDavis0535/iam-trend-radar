@@ -1,0 +1,10 @@
+# Not part of the published site
+memory/
+usermemory/
+_site/
+node_modules/
+
+# Personal working notes, not part of the published project
+docs/agent-teams-*.md
+docs/iam-site/
+docs/README.md

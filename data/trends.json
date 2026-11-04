@@ -1,0 +1,548 @@
+[
+  {
+    "id": "passkeys-passwordless",
+    "title": "Passkeys and passwordless authentication",
+    "categories": [
+      "authentication"
+    ],
+    "maturity": "growing",
+    "impact": "high",
+    "momentum": "rising",
+    "summary": "Passkeys are FIDO2/WebAuthn credentials that replace passwords with public-key cryptography bound to a device or synced across a user's devices, resisting phishing and credential reuse.",
+    "whyItMatters": "Passwords and one-time codes are widely targeted by phishing and credential stuffing. Passkeys remove the shared secret from the login flow, which can reduce phishing exposure and password-reset workload, but they force a rethink of enrollment, recovery and lost-device processes.",
+    "risks": [
+      "Account recovery can become the weakest link",
+      "Synced passkeys shift trust to the credential manager or platform provider",
+      "Legacy applications keep passwords alive in mixed estates",
+      "Attestation and assurance needs differ for regulated use cases"
+    ],
+    "keyStandards": [
+      "FIDO2 (WebAuthn + CTAP)",
+      "W3C Web Authentication",
+      "NIST SP 800-63B"
+    ],
+    "relatedTrends": [
+      "zero-trust-identity"
+    ],
+    "sources": [
+      {
+        "title": "Passkeys (Passwordless Authentication)",
+        "publisher": "FIDO Alliance",
+        "url": "https://fidoalliance.org/passkeys/",
+        "type": "standard",
+        "published": null,
+        "accessed": "2026-11-04"
+      },
+      {
+        "title": "Web Authentication: An API for accessing Public Key Credentials Level 2",
+        "publisher": "W3C",
+        "url": "https://www.w3.org/TR/webauthn-2/",
+        "type": "standard",
+        "published": "2021-04",
+        "accessed": "2026-11-04"
+      },
+      {
+        "title": "NIST SP 800-63B: Digital Identity Guidelines, Authentication and Lifecycle Management",
+        "publisher": "NIST",
+        "url": "https://pages.nist.gov/800-63-3/sp800-63b.html",
+        "type": "government",
+        "published": "2017-06",
+        "accessed": "2026-11-04"
+      }
+    ],
+    "needsVerification": false,
+    "verificationNotes": "",
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "zero-trust-identity",
+    "title": "Identity-centric zero trust",
+    "categories": [
+      "architecture"
+    ],
+    "maturity": "mainstream",
+    "impact": "high",
+    "momentum": "steady",
+    "summary": "Zero trust treats identity as a primary control plane: every access request is authenticated, authorized and evaluated in context rather than trusted because of network location.",
+    "whyItMatters": "Perimeter assumptions break down with cloud, SaaS and remote work. Identity-centric policy decisions let organizations apply least privilege per request, but they depend on accurate identity data, strong authentication and policy enforcement across applications.",
+    "risks": [
+      "Poor identity data quality weakens policy decisions",
+      "Legacy applications without modern authentication cannot enforce per-request policy",
+      "Unclear ownership between network, identity and endpoint teams",
+      "Zero trust used as a label without measurable maturity goals"
+    ],
+    "keyStandards": [
+      "NIST SP 800-207 Zero Trust Architecture",
+      "CISA Zero Trust Maturity Model"
+    ],
+    "relatedTrends": [
+      "passkeys-passwordless",
+      "pam-just-in-time",
+      "itdr"
+    ],
+    "sources": [
+      {
+        "title": "NIST SP 800-207: Zero Trust Architecture",
+        "publisher": "NIST",
+        "url": "https://csrc.nist.gov/pubs/sp/800/207/final",
+        "type": "government",
+        "published": "2020-08",
+        "accessed": "2026-11-04"
+      },
+      {
+        "title": "Zero Trust Maturity Model",
+        "publisher": "CISA",
+        "url": "https://www.cisa.gov/zero-trust-maturity-model",
+        "type": "government",
+        "published": null,
+        "accessed": "2026-11-04"
+      }
+    ],
+    "needsVerification": false,
+    "verificationNotes": "",
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "itdr",
+    "title": "Identity threat detection and response (ITDR)",
+    "categories": [
+      "threat-detection"
+    ],
+    "maturity": "growing",
+    "impact": "high",
+    "momentum": "rising",
+    "summary": "ITDR is an industry label for monitoring identity systems, sessions and entitlements for attack behavior such as credential abuse and privilege escalation, and for supporting containment and response.",
+    "whyItMatters": "Attackers can operate with valid accounts and abuse credentials (MITRE ATT&CK T1078), so controls focused only on prevention can miss them. ITDR adds detection and response tied to identity context. It is an industry label rather than a defined standard, so its scope varies by vendor.",
+    "risks": [
+      "Scope and definition of ITDR vary between vendors and analysts",
+      "Detection depends on complete identity-provider and directory logging",
+      "Alert volume without tested response playbooks",
+      "Overlap with SIEM, EDR and PAM tooling"
+    ],
+    "keyStandards": [
+      "MITRE ATT&CK Valid Accounts (T1078)",
+      "MITRE ATT&CK Credential Access tactic (TA0006)"
+    ],
+    "relatedTrends": [
+      "pam-just-in-time",
+      "zero-trust-identity"
+    ],
+    "sources": [
+      {
+        "title": "Valid Accounts, Technique T1078",
+        "publisher": "MITRE ATT&CK",
+        "url": "https://attack.mitre.org/techniques/T1078/",
+        "type": "research",
+        "published": null,
+        "accessed": "2026-11-04"
+      },
+      {
+        "title": "Credential Access, Tactic TA0006",
+        "publisher": "MITRE ATT&CK",
+        "url": "https://attack.mitre.org/tactics/TA0006/",
+        "type": "research",
+        "published": null,
+        "accessed": "2026-11-04"
+      }
+    ],
+    "needsVerification": false,
+    "verificationNotes": "",
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "non-human-identity",
+    "title": "Non-human identity (NHI) security",
+    "categories": [
+      "workload-identity"
+    ],
+    "maturity": "growing",
+    "impact": "transformative",
+    "momentum": "rising",
+    "summary": "Non-human identities such as service accounts, API keys, tokens and workload identities are numerous, frequently over-privileged and long-lived, and often lack clear ownership or rotation.",
+    "whyItMatters": "Machine credentials are embedded in code, pipelines and SaaS integrations where human-centric controls do not reach. Inventory, ownership, short-lived credentials and workload attestation change how identity programs are scoped.",
+    "risks": [
+      "Secrets leaked in code repositories, logs and tickets",
+      "Long-lived credentials that are never rotated",
+      "No named owner for service accounts and integrations",
+      "Retrofitting workload identity into legacy systems"
+    ],
+    "keyStandards": [
+      "OWASP Non-Human Identities Top 10 (2025, incubator project)",
+      "SPIFFE / SPIRE workload identity"
+    ],
+    "relatedTrends": [
+      "ai-agent-identity",
+      "ciem-cloud-entitlements",
+      "iga-modernization"
+    ],
+    "sources": [
+      {
+        "title": "OWASP Non-Human Identities Top 10",
+        "publisher": "OWASP",
+        "url": "https://owasp.org/www-project-non-human-identities-top-10/",
+        "type": "research",
+        "published": null,
+        "accessed": "2026-11-04"
+      },
+      {
+        "title": "SPIFFE: Secure Production Identity Framework for Everyone",
+        "publisher": "SPIFFE / CNCF",
+        "url": "https://spiffe.io/",
+        "type": "standard",
+        "published": null,
+        "accessed": "2026-11-04"
+      }
+    ],
+    "needsVerification": false,
+    "lastUpdated": "2026-11-04",
+    "verificationNotes": ""
+  },
+  {
+    "id": "iga-modernization",
+    "title": "Identity governance (IGA) modernization",
+    "categories": [
+      "governance"
+    ],
+    "maturity": "mainstream",
+    "impact": "medium",
+    "momentum": "steady",
+    "summary": "Identity governance pairs account lifecycle management with recurring access reviews, which NIST SP 800-53 expects (AC-2). Products now add automation and review recommendations, such as inactive-user suggestions, to cut manual review effort.",
+    "whyItMatters": "Joiner-mover-leaver errors and accumulated access can cause audit findings and excess privilege. Automation depends on clean authoritative data: vendor documentation itself notes the case where HR data is not in the identity system. Coverage of SaaS and non-human accounts is an open challenge for many programs.",
+    "risks": [
+      "Poor authoritative-source data undermines automation",
+      "Reviewers approve in bulk without context (review fatigue)",
+      "Connector coverage gaps for SaaS and custom applications",
+      "Role mining projects that stall"
+    ],
+    "keyStandards": [
+      "NIST SP 800-53 Rev. 5 Access Control (AC) family",
+      "NIST CSF 2.0 (PR.AA)",
+      "SCIM (RFC 7644)"
+    ],
+    "relatedTrends": [
+      "non-human-identity",
+      "identity-regulation"
+    ],
+    "sources": [
+      {
+        "title": "NIST SP 800-53 Rev. 5: Security and Privacy Controls for Information Systems and Organizations",
+        "publisher": "NIST",
+        "url": "https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final",
+        "type": "government",
+        "published": "2020-09",
+        "accessed": "2026-11-04"
+      },
+      {
+        "title": "The NIST Cybersecurity Framework (CSF) 2.0",
+        "publisher": "NIST",
+        "url": "https://www.nist.gov/cyberframework",
+        "type": "government",
+        "published": "2024-02",
+        "accessed": "2026-11-04"
+      },
+      {
+        "title": "System for Cross-domain Identity Management: Protocol (RFC 7644)",
+        "publisher": "IETF",
+        "url": "https://www.rfc-editor.org/rfc/rfc7644",
+        "type": "standard",
+        "published": "2015-09",
+        "accessed": "2026-11-04"
+      },
+      {
+        "title": "IDSO-015: User access rights are granted according to the principle of least privilege",
+        "publisher": "Identity Defined Security Alliance",
+        "url": "https://www.idsalliance.org/security-outcome/user-access-rights-are-granted-according-to-the-principle-of-least-privilege/",
+        "type": "research",
+        "published": null,
+        "accessed": "2026-11-04"
+      },
+      {
+        "title": "What are access reviews? (Microsoft Entra ID Governance)",
+        "publisher": "Microsoft Learn",
+        "url": "https://learn.microsoft.com/en-us/entra/id-governance/access-reviews-overview",
+        "type": "vendor",
+        "published": "2026-03",
+        "accessed": "2026-11-04"
+      }
+    ],
+    "needsVerification": false,
+    "verificationNotes": "",
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "pam-just-in-time",
+    "title": "Just-in-time privileged access",
+    "categories": [
+      "privileged-access"
+    ],
+    "maturity": "mainstream",
+    "impact": "high",
+    "momentum": "steady",
+    "summary": "Privileged access management is moving from standing admin rights toward just-in-time, time-bound elevation with session monitoring and credential vaulting, shrinking the window in which privilege can be abused.",
+    "whyItMatters": "Standing privileged access is a high-value target. Granting elevation only when needed, with approval and logging, supports least privilege (NIST SP 800-53 AC-6) and reduces exposure, at the cost of workflow friction and the need to plan emergency access.",
+    "risks": [
+      "Approval friction pushes admins toward workarounds",
+      "Break-glass accounts are poorly protected or untested",
+      "Shadow privileged accounts outside the PAM inventory",
+      "Elevation workflows are not integrated with ticketing and change control"
+    ],
+    "keyStandards": [
+      "NIST SP 800-53 Rev. 5 AC-6 Least Privilege",
+      "CISA Zero Trust Maturity Model"
+    ],
+    "relatedTrends": [
+      "itdr",
+      "zero-trust-identity",
+      "ciem-cloud-entitlements"
+    ],
+    "sources": [
+      {
+        "title": "NIST SP 800-53 Rev. 5: Security and Privacy Controls for Information Systems and Organizations",
+        "publisher": "NIST",
+        "url": "https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final",
+        "type": "government",
+        "published": "2020-09",
+        "accessed": "2026-11-04"
+      },
+      {
+        "title": "Zero Trust Maturity Model",
+        "publisher": "CISA",
+        "url": "https://www.cisa.gov/zero-trust-maturity-model",
+        "type": "government",
+        "published": null,
+        "accessed": "2026-11-04"
+      }
+    ],
+    "needsVerification": false,
+    "verificationNotes": "",
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "ciem-cloud-entitlements",
+    "title": "Cloud infrastructure entitlement management (CIEM)",
+    "categories": [
+      "cloud-entitlements"
+    ],
+    "maturity": "growing",
+    "impact": "medium",
+    "momentum": "steady",
+    "summary": "CIEM analyzes effective permissions across cloud accounts to find unused or excessive access and recommend least-privilege policies.",
+    "whyItMatters": "Cloud permission models are granular and change quickly, so granted access drifts far from what is used. Tooling that compares granted and used permissions helps right-size access, though it works best alongside governance and infrastructure-as-code practices.",
+    "risks": [
+      "Recommendations applied without testing can break workloads",
+      "Multi-cloud views are inconsistent between providers",
+      "Findings pile up without an owner or remediation process",
+      "Console changes bypass infrastructure-as-code"
+    ],
+    "keyStandards": [
+      "Cloud provider IAM policy models"
+    ],
+    "relatedTrends": [
+      "pam-just-in-time",
+      "non-human-identity"
+    ],
+    "sources": [
+      {
+        "title": "What is IAM Access Analyzer?",
+        "publisher": "Amazon Web Services",
+        "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html",
+        "type": "vendor",
+        "published": null,
+        "accessed": "2026-11-04"
+      },
+      {
+        "title": "IAM recommender overview",
+        "publisher": "Google Cloud",
+        "url": "https://cloud.google.com/iam/docs/recommender-overview",
+        "type": "vendor",
+        "published": null,
+        "accessed": "2026-11-04"
+      }
+    ],
+    "needsVerification": false,
+    "verificationNotes": "",
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "decentralized-identity-wallets",
+    "title": "Decentralized identity and digital identity wallets",
+    "categories": [
+      "decentralized-identity"
+    ],
+    "maturity": "emerging",
+    "impact": "medium",
+    "momentum": "rising",
+    "summary": "Verifiable credentials and digital identity wallets let people hold signed attestations and present them selectively, reducing reliance on centralized identity providers for some use cases.",
+    "whyItMatters": "Reusable, cryptographically verifiable credentials could simplify onboarding and proofing and improve privacy through selective disclosure. Ecosystem trust frameworks, wallet interoperability and issuer adoption are still maturing.",
+    "risks": [
+      "Interoperability between credential formats and wallets",
+      "Unclear trust frameworks and issuer accreditation",
+      "Credential revocation and recovery are hard problems",
+      "Low relying-party adoption limits user value"
+    ],
+    "keyStandards": [
+      "W3C Verifiable Credentials Data Model 2.0",
+      "W3C Decentralized Identifiers (DID) Core",
+      "Regulation (EU) 2024/1183 (eIDAS amendment)"
+    ],
+    "relatedTrends": [
+      "identity-regulation"
+    ],
+    "sources": [
+      {
+        "title": "Verifiable Credentials Data Model v2.0",
+        "publisher": "W3C",
+        "url": "https://www.w3.org/TR/vc-data-model-2.0/",
+        "type": "standard",
+        "published": "2025-05",
+        "accessed": "2026-11-04"
+      },
+      {
+        "title": "Decentralized Identifiers (DIDs) v1.0",
+        "publisher": "W3C",
+        "url": "https://www.w3.org/TR/did-core/",
+        "type": "standard",
+        "published": "2022-07",
+        "accessed": "2026-11-04"
+      },
+      {
+        "title": "Regulation (EU) 2024/1183 amending Regulation (EU) No 910/2014 as regards establishing the European Digital Identity Framework",
+        "publisher": "EUR-Lex",
+        "url": "https://eur-lex.europa.eu/eli/reg/2024/1183/oj",
+        "type": "government",
+        "published": "2024-04",
+        "accessed": "2026-11-04"
+      }
+    ],
+    "needsVerification": false,
+    "lastUpdated": "2026-11-04",
+    "verificationNotes": ""
+  },
+  {
+    "id": "ai-agent-identity",
+    "title": "Identity for AI agents",
+    "categories": [
+      "ai-identity"
+    ],
+    "maturity": "emerging",
+    "impact": "high",
+    "momentum": "rising",
+    "summary": "AI agents act on behalf of users and call tools and APIs, raising new questions about how to identify, authenticate, authorize, delegate to and audit autonomous software actors.",
+    "whyItMatters": "Agents can chain actions across systems using delegated credentials, which strains models built for human sessions and static service accounts. Scoped, short-lived, auditable delegation is an active area of standards and product work.",
+    "risks": [
+      "Over-broad delegated tokens give an agent more access than the task needs",
+      "Prompt injection can turn legitimate agent access into misuse",
+      "Weak attribution of agent actions in audit logs",
+      "Standards and protocols are still changing"
+    ],
+    "keyStandards": [
+      "OAuth 2.x (IETF drafts)",
+      "Model Context Protocol authorization",
+      "OWASP GenAI Security Project guidance"
+    ],
+    "relatedTrends": [
+      "non-human-identity"
+    ],
+    "sources": [
+      {
+        "title": "The OAuth 2.1 Authorization Framework (Internet-Draft)",
+        "publisher": "IETF",
+        "url": "https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/",
+        "type": "standard",
+        "published": null,
+        "accessed": "2026-11-04"
+      },
+      {
+        "title": "Model Context Protocol",
+        "publisher": "Model Context Protocol project",
+        "url": "https://modelcontextprotocol.io/",
+        "type": "vendor",
+        "published": null,
+        "accessed": "2026-11-04"
+      },
+      {
+        "title": "OWASP GenAI Security Project",
+        "publisher": "OWASP",
+        "url": "https://genai.owasp.org/",
+        "type": "research",
+        "published": null,
+        "accessed": "2026-11-04"
+      },
+      {
+        "title": "OWASP Top 10 for Agentic Applications: The Benchmark for Agentic Security in the Age of Autonomous AI",
+        "publisher": "OWASP GenAI Security Project",
+        "url": "https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/",
+        "type": "research",
+        "published": "2025-12",
+        "accessed": "2026-11-04"
+      },
+      {
+        "title": "Model Context Protocol specification (2026-07-28): Authorization",
+        "publisher": "Model Context Protocol project",
+        "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization",
+        "type": "vendor",
+        "published": "2026-07",
+        "accessed": "2026-11-04"
+      }
+    ],
+    "needsVerification": false,
+    "verificationNotes": "",
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "identity-regulation",
+    "title": "Identity-related regulation and standards",
+    "categories": [
+      "regulation"
+    ],
+    "maturity": "mainstream",
+    "impact": "high",
+    "momentum": "rising",
+    "summary": "Regulation increasingly sets identity and access expectations, including NIS2 and DORA in the EU, eIDAS amendments for digital identity wallets, and evolving NIST digital identity guidelines in the US.",
+    "whyItMatters": "Compliance drives requirements for strong authentication, access governance and third-party access control. Obligations and deadlines differ by sector and jurisdiction and change over time, so teams should map them to their own scope rather than rely on summaries.",
+    "risks": [
+      "Misreading which obligations apply to your entity and sector",
+      "Evidence for access controls is scattered across tools",
+      "Deadlines and national transposition vary by jurisdiction",
+      "Treating compliance as the ceiling for identity security"
+    ],
+    "keyStandards": [
+      "NIS2 Directive (EU) 2022/2555",
+      "DORA Regulation (EU) 2022/2554",
+      "NIST SP 800-63-4"
+    ],
+    "relatedTrends": [
+      "decentralized-identity-wallets",
+      "iga-modernization"
+    ],
+    "sources": [
+      {
+        "title": "Directive (EU) 2022/2555 (NIS2)",
+        "publisher": "EUR-Lex",
+        "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+        "type": "government",
+        "published": "2022-12",
+        "accessed": "2026-11-04"
+      },
+      {
+        "title": "Regulation (EU) 2022/2554 (DORA)",
+        "publisher": "EUR-Lex",
+        "url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+        "type": "government",
+        "published": "2022-12",
+        "accessed": "2026-11-04"
+      },
+      {
+        "title": "NIST SP 800-63-4: Digital Identity Guidelines",
+        "publisher": "NIST",
+        "url": "https://pages.nist.gov/800-63-4/",
+        "type": "government",
+        "published": "2025-07",
+        "accessed": "2026-11-04"
+      }
+    ],
+    "needsVerification": false,
+    "verificationNotes": "",
+    "lastUpdated": "2026-11-04"
+  }
+]

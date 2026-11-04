@@ -1,0 +1,41 @@
+{
+  "categories": [
+    { "id": "authentication", "label": "Authentication", "description": "How users and devices prove who they are." },
+    { "id": "governance", "label": "Governance", "description": "Lifecycle, access reviews, roles and policy for who should have access." },
+    { "id": "privileged-access", "label": "Privileged access", "description": "Controlling and monitoring administrative and other high-risk access." },
+    { "id": "threat-detection", "label": "Threat detection", "description": "Detecting and responding to attacks that target identities and identity systems." },
+    { "id": "workload-identity", "label": "Workload identity", "description": "Identities for services, applications, scripts and other non-human actors." },
+    { "id": "cloud-entitlements", "label": "Cloud entitlements", "description": "Understanding and right-sizing permissions in cloud environments." },
+    { "id": "decentralized-identity", "label": "Decentralized identity", "description": "Verifiable credentials, wallets and user-held identity data." },
+    { "id": "ai-identity", "label": "AI identity", "description": "Identity, delegation and authorization for AI agents and AI-driven automation." },
+    { "id": "architecture", "label": "Architecture", "description": "Identity-centric security architecture and design principles." },
+    { "id": "regulation", "label": "Regulation", "description": "Laws, directives and standards that shape identity and access requirements." }
+  ],
+  "maturity": [
+    { "id": "emerging", "label": "Emerging", "rank": 1, "description": "Early research or pilots." },
+    { "id": "growing", "label": "Growing", "rank": 2, "description": "Early adopters; products are shipping." },
+    { "id": "mainstream", "label": "Mainstream", "rank": 3, "description": "Widely deployed." },
+    { "id": "established", "label": "Established", "rank": 4, "description": "Baseline expectation." }
+  ],
+  "impact": [
+    { "id": "low", "label": "Low", "rank": 1, "description": "Incremental improvement." },
+    { "id": "medium", "label": "Medium", "rank": 2, "description": "Notable improvement in a domain." },
+    { "id": "high", "label": "High", "rank": 3, "description": "Significant change to risk or operations." },
+    { "id": "transformative", "label": "Transformative", "rank": 4, "description": "Reshapes how identity programs are designed." }
+  ],
+  "momentum": [
+    { "id": "rising", "label": "Rising", "description": "Attention and adoption are increasing." },
+    { "id": "steady", "label": "Steady", "description": "Stable attention and adoption." },
+    { "id": "cooling", "label": "Cooling", "description": "Attention or adoption is decreasing." }
+  ],
+  "effort": [
+    { "id": "low", "label": "Low", "rank": 1, "description": "Less than one quarter, small team." },
+    { "id": "medium", "label": "Medium", "rank": 2, "description": "One to two quarters." },
+    { "id": "high", "label": "High", "rank": 3, "description": "More than two quarters or a cross-org program." }
+  ],
+  "horizon": [
+    { "id": "now", "label": "Now", "description": "0-3 months." },
+    { "id": "next", "label": "Next", "description": "3-9 months." },
+    { "id": "later", "label": "Later", "description": "9+ months." }
+  ]
+}

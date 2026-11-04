@@ -1,0 +1,383 @@
+[
+  {
+    "id": "rec-passkey-pilot-workforce",
+    "trendIds": ["passkeys-passwordless"],
+    "title": "Pilot passkeys for a workforce population",
+    "description": "Enable passkeys for a bounded group of users on your primary identity provider, measure the enrollment and sign-in experience, and learn what recovery and support needs appear before wider rollout.",
+    "horizon": "now",
+    "effort": "medium",
+    "impact": "high",
+    "steps": [
+      "Choose a pilot group and confirm supported devices and browsers",
+      "Enable passkey registration on the identity provider",
+      "Publish short enrollment and lost-device instructions",
+      "Collect support tickets and user feedback for one cycle",
+      "Decide on expansion criteria"
+    ],
+    "successMetrics": ["Pilot users can enroll and sign in without help-desk assistance", "Recovery path tested for a lost device", "Documented list of blocking applications"],
+    "dependencies": ["Identity provider that supports WebAuthn / passkeys"],
+    "audience": ["iam-architect", "security-manager"],
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "rec-passkey-recovery-design",
+    "trendIds": ["passkeys-passwordless"],
+    "title": "Design account recovery before removing passwords",
+    "description": "Define and test how users regain access after losing every device, and ensure the recovery path is not weaker than the authenticator it replaces.",
+    "horizon": "next",
+    "effort": "medium",
+    "impact": "high",
+    "steps": [
+      "Map current reset and recovery flows and their weaknesses",
+      "Define identity re-proofing requirements by risk level",
+      "Add approval and notification steps for high-risk recovery",
+      "Run a tabletop test of a lost-device scenario"
+    ],
+    "successMetrics": ["Recovery flow documented and tested", "Recovery events are logged and reviewable"],
+    "dependencies": ["rec-passkey-pilot-workforce"],
+    "audience": ["iam-architect", "ciso"],
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "rec-zt-baseline-assessment",
+    "trendIds": ["zero-trust-identity"],
+    "title": "Assess identity maturity against a zero trust model",
+    "description": "Score your identity capabilities against the CISA Zero Trust Maturity Model identity pillar to find the highest-value gaps and set a baseline for tracking progress.",
+    "horizon": "now",
+    "effort": "low",
+    "impact": "high",
+    "steps": [
+      "Read the identity pillar of the CISA Zero Trust Maturity Model",
+      "Workshop current capabilities with identity, network and endpoint owners",
+      "Record maturity stage per capability with evidence",
+      "Prioritize three gaps for the roadmap"
+    ],
+    "successMetrics": ["Documented baseline with named owners", "Gaps ranked and linked to roadmap items"],
+    "dependencies": [],
+    "audience": ["iam-architect", "ciso"],
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "rec-zt-conditional-access",
+    "trendIds": ["zero-trust-identity"],
+    "title": "Roll out context-aware access policies for key applications",
+    "description": "Apply authentication strength and access conditions per application based on sensitivity, starting with the most critical applications and administrative portals.",
+    "horizon": "next",
+    "effort": "medium",
+    "impact": "high",
+    "steps": [
+      "Classify applications by sensitivity",
+      "Define baseline policy tiers (authentication strength, device state, risk signals)",
+      "Run policies in report-only mode and review impact",
+      "Enforce tier by tier with exception handling"
+    ],
+    "successMetrics": ["Critical applications covered by an explicit policy tier", "Exceptions tracked with owners and expiry"],
+    "dependencies": ["rec-zt-baseline-assessment"],
+    "audience": ["iam-architect", "security-manager"],
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "rec-itdr-log-coverage",
+    "trendIds": ["itdr"],
+    "title": "Close identity logging gaps",
+    "description": "Verify that identity provider, directory, PAM and cloud IAM logs reach your detection platform with enough detail to reconstruct authentication and privilege changes.",
+    "horizon": "now",
+    "effort": "low",
+    "impact": "high",
+    "steps": [
+      "List identity systems and their log sources",
+      "Confirm retention and ingestion for each source",
+      "Test that a known privilege change can be traced end to end",
+      "Document and ticket gaps"
+    ],
+    "successMetrics": ["Each identity system has a verified log feed", "A sample privilege change is traceable in the detection platform"],
+    "dependencies": [],
+    "audience": ["soc-analyst", "iam-architect"],
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "rec-itdr-response-playbooks",
+    "trendIds": ["itdr"],
+    "title": "Write identity incident response playbooks",
+    "description": "Create tested playbooks for compromised accounts, suspicious privilege grants and session hijacking, including who can disable accounts and revoke sessions and tokens.",
+    "horizon": "next",
+    "effort": "medium",
+    "impact": "high",
+    "steps": [
+      "Select scenarios from observed or ATT&CK-mapped identity techniques",
+      "Define containment actions and approvers",
+      "Automate low-risk steps such as session revocation where feasible",
+      "Exercise each playbook and record lessons"
+    ],
+    "successMetrics": ["Playbooks exist and have been exercised", "Containment authority is documented"],
+    "dependencies": ["rec-itdr-log-coverage"],
+    "audience": ["soc-analyst", "security-manager"],
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "rec-nhi-inventory",
+    "trendIds": ["non-human-identity"],
+    "title": "Build an owned inventory of non-human identities",
+    "description": "Discover service accounts, API keys, tokens and workload identities, assign a named owner and purpose to each, and flag those that are unused, over-privileged or long-lived.",
+    "horizon": "now",
+    "effort": "medium",
+    "impact": "transformative",
+    "steps": [
+      "Pull accounts and credentials from directories, cloud IAM and secret stores",
+      "Assign an owner and purpose to each identity",
+      "Flag unused, shared and long-lived credentials",
+      "Set a policy for creating new non-human identities"
+    ],
+    "successMetrics": ["Every inventoried identity has a named owner", "Orphaned identities identified and scheduled for removal"],
+    "dependencies": [],
+    "audience": ["iam-architect", "security-manager"],
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "rec-nhi-short-lived-credentials",
+    "trendIds": ["non-human-identity"],
+    "title": "Move workloads to short-lived credentials",
+    "description": "Replace static secrets with federated or attested, short-lived credentials where platforms allow, and rotate the remainder on a defined schedule.",
+    "horizon": "next",
+    "effort": "high",
+    "impact": "high",
+    "steps": [
+      "Prioritize workloads holding the most sensitive static secrets",
+      "Adopt workload identity federation or attestation for those workloads",
+      "Automate rotation for secrets that cannot be removed",
+      "Block creation of new long-lived keys where possible"
+    ],
+    "successMetrics": ["Number of static long-lived credentials trends downward", "Rotation is automated for remaining secrets"],
+    "dependencies": ["rec-nhi-inventory"],
+    "audience": ["iam-architect", "app-owner"],
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "rec-iga-authoritative-source",
+    "trendIds": ["iga-modernization"],
+    "title": "Fix the authoritative source for joiners, movers and leavers",
+    "description": "Establish a trusted HR-driven source of identity lifecycle events and measure how quickly access changes follow, before layering on advanced governance features.",
+    "horizon": "now",
+    "effort": "medium",
+    "impact": "medium",
+    "steps": [
+      "Document the current lifecycle data flow from HR to systems",
+      "Identify data quality defects such as missing managers or stale statuses",
+      "Define mover and leaver triggers and expected timelines",
+      "Measure and report lifecycle timeliness"
+    ],
+    "successMetrics": ["Leaver access removal timeliness is measured", "Data quality defects are tracked to closure"],
+    "dependencies": ["Cooperation from HR systems owners"],
+    "audience": ["iga-engineer", "compliance-lead"],
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "rec-iga-risk-based-certification",
+    "trendIds": ["iga-modernization"],
+    "title": "Shift access reviews to risk-based certification",
+    "description": "Focus reviewer effort on high-risk entitlements and unusual access, and reduce or automate review of low-risk, well-governed access to limit review fatigue.",
+    "horizon": "next",
+    "effort": "high",
+    "impact": "medium",
+    "steps": [
+      "Classify entitlements by risk",
+      "Define review frequency and reviewer by risk tier",
+      "Provide reviewers with usage and peer-group context",
+      "Compare review outcomes before and after the change"
+    ],
+    "successMetrics": ["Reviewers can explain decisions for high-risk entitlements", "Revocation rate for high-risk items is tracked"],
+    "dependencies": ["rec-iga-authoritative-source"],
+    "audience": ["iga-engineer", "compliance-lead"],
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "rec-pam-remove-standing-admin",
+    "trendIds": ["pam-just-in-time"],
+    "title": "Reduce standing administrator access",
+    "description": "Inventory permanent privileged role assignments and convert them to eligible, time-bound elevation for the most sensitive roles first.",
+    "horizon": "now",
+    "effort": "medium",
+    "impact": "high",
+    "steps": [
+      "List permanent privileged assignments across directories and cloud",
+      "Remove assignments that are unused or unjustified",
+      "Convert remaining sensitive roles to eligible, time-bound access",
+      "Require approval or justification for the highest-risk roles"
+    ],
+    "successMetrics": ["Standing privileged assignments are justified and owned", "Elevation events are logged with a reason"],
+    "dependencies": [],
+    "audience": ["pam-engineer", "ciso"],
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "rec-pam-break-glass",
+    "trendIds": ["pam-just-in-time"],
+    "title": "Harden and test emergency access accounts",
+    "description": "Ensure break-glass accounts exist, are strongly protected, are not dependent on the systems they are meant to recover, and trigger alerts when used.",
+    "horizon": "now",
+    "effort": "low",
+    "impact": "medium",
+    "steps": [
+      "Identify existing emergency accounts",
+      "Protect credentials with strong, offline-recoverable authentication",
+      "Alert on every use",
+      "Test the procedure on a schedule"
+    ],
+    "successMetrics": ["Emergency access is tested and any use is alerted", "Credential custody is documented"],
+    "dependencies": [],
+    "audience": ["pam-engineer", "security-manager"],
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "rec-ciem-unused-permissions",
+    "trendIds": ["ciem-cloud-entitlements"],
+    "title": "Review unused and external-access findings in cloud IAM",
+    "description": "Use provider-native analyzers to list unused permissions and unintended external access, then remediate the highest-risk findings with owners.",
+    "horizon": "now",
+    "effort": "low",
+    "impact": "medium",
+    "steps": [
+      "Enable the provider's access analysis features",
+      "Triage findings by resource sensitivity",
+      "Assign remediation to account owners",
+      "Track findings to closure"
+    ],
+    "successMetrics": ["High-risk findings have an owner and due date", "Closed findings are verified"],
+    "dependencies": [],
+    "audience": ["iam-architect", "security-manager"],
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "rec-ciem-least-privilege-pipeline",
+    "trendIds": ["ciem-cloud-entitlements", "non-human-identity"],
+    "title": "Embed least-privilege checks in infrastructure-as-code pipelines",
+    "description": "Check proposed IAM policies for excessive permissions before deployment, so new access is right-sized at creation instead of corrected later.",
+    "horizon": "next",
+    "effort": "high",
+    "impact": "medium",
+    "steps": [
+      "Select a policy-validation tool supported by your cloud provider",
+      "Add checks to pull requests for IAM changes",
+      "Define what blocks a merge versus what warns",
+      "Review exceptions regularly"
+    ],
+    "successMetrics": ["IAM changes pass automated checks before deployment", "Exception list is small and reviewed"],
+    "dependencies": ["rec-ciem-unused-permissions"],
+    "audience": ["iam-architect", "app-owner"],
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "rec-did-use-case-assessment",
+    "trendIds": ["decentralized-identity-wallets"],
+    "title": "Assess where verifiable credentials could help",
+    "description": "Identify one or two processes such as onboarding, partner access or credential verification where reusable credentials could reduce friction, and document the trust and privacy requirements.",
+    "horizon": "next",
+    "effort": "low",
+    "impact": "medium",
+    "steps": [
+      "Collect candidate use cases with business owners",
+      "Identify who would issue, hold and verify the credentials",
+      "Assess regulatory and privacy constraints",
+      "Select at most one use case for a pilot decision"
+    ],
+    "successMetrics": ["Use cases documented with issuers and verifiers named", "Go or no-go decision recorded"],
+    "dependencies": [],
+    "audience": ["iam-architect", "compliance-lead"],
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "rec-did-wallet-readiness",
+    "trendIds": ["decentralized-identity-wallets", "identity-regulation"],
+    "title": "Track digital identity wallet requirements for your sector",
+    "description": "Monitor wallet and trust framework developments that may affect customer or employee onboarding, and plan how your relying-party systems would accept wallet credentials.",
+    "horizon": "later",
+    "effort": "medium",
+    "impact": "medium",
+    "steps": [
+      "Assign an owner to track regulatory and standards changes",
+      "Review which journeys might accept wallet credentials",
+      "Identify technical changes needed to verify credentials",
+      "Revisit the plan on each dataset review"
+    ],
+    "successMetrics": ["Named owner and review cadence", "Documented list of affected journeys"],
+    "dependencies": ["rec-did-use-case-assessment"],
+    "audience": ["iam-architect", "compliance-lead"],
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "rec-agent-inventory",
+    "trendIds": ["ai-agent-identity", "non-human-identity"],
+    "title": "Inventory AI agents and the credentials they use",
+    "description": "Find out which AI agents and assistants act in your environment, which identities and tokens they use, and what they can reach, before writing policy.",
+    "horizon": "now",
+    "effort": "low",
+    "impact": "high",
+    "steps": [
+      "Survey teams for agents, assistants and automation using AI models",
+      "Record the credentials, scopes and data each can access",
+      "Identify agents acting with a shared or human user's credentials",
+      "Name an owner for each agent"
+    ],
+    "successMetrics": ["Each known agent has an owner and a credential record", "Agents using shared human credentials are identified"],
+    "dependencies": [],
+    "audience": ["iam-architect", "ciso"],
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "rec-agent-scoped-delegation",
+    "trendIds": ["ai-agent-identity"],
+    "title": "Require scoped, short-lived delegation for agents",
+    "description": "Set a standard that agents act with narrowly scoped, expiring, auditable credentials tied to the delegating user and task, and require human approval for high-impact actions.",
+    "horizon": "next",
+    "effort": "medium",
+    "impact": "high",
+    "steps": [
+      "Define allowed scopes and token lifetimes for agents",
+      "Require the delegating user to be recorded in audit logs",
+      "Identify actions that need human approval",
+      "Review current specifications and update the standard as they evolve"
+    ],
+    "successMetrics": ["Agent actions are attributable to an agent and a delegating user", "High-impact actions require approval"],
+    "dependencies": ["rec-agent-inventory"],
+    "audience": ["iam-architect", "ciso"],
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "rec-reg-obligations-map",
+    "trendIds": ["identity-regulation"],
+    "title": "Map identity obligations to your regulatory scope",
+    "description": "With legal and compliance, list which regulations apply to your entities and extract the identity and access requirements they imply, with citations to the official text.",
+    "horizon": "now",
+    "effort": "medium",
+    "impact": "high",
+    "steps": [
+      "Confirm applicable regulations by entity and jurisdiction",
+      "Extract identity-related obligations with references",
+      "Map obligations to existing controls",
+      "Record gaps and owners"
+    ],
+    "successMetrics": ["Obligation-to-control map exists with citations", "Gaps have owners"],
+    "dependencies": ["Legal and compliance review"],
+    "audience": ["compliance-lead", "ciso"],
+    "lastUpdated": "2026-11-04"
+  },
+  {
+    "id": "rec-reg-evidence-automation",
+    "trendIds": ["identity-regulation", "iga-modernization"],
+    "title": "Automate evidence collection for access controls",
+    "description": "Generate recurring evidence of authentication strength, access reviews and privileged access directly from systems so audits do not depend on manual screenshots.",
+    "horizon": "next",
+    "effort": "high",
+    "impact": "medium",
+    "steps": [
+      "List evidence requests auditors ask for most often",
+      "Identify the system of record for each",
+      "Schedule exports or reports with integrity controls",
+      "Review the evidence pack with auditors"
+    ],
+    "successMetrics": ["Evidence for key controls is produced on a schedule", "Audit requests are answered from system reports"],
+    "dependencies": ["rec-reg-obligations-map"],
+    "audience": ["compliance-lead", "iga-engineer"],
+    "lastUpdated": "2026-11-04"
+  }
+]

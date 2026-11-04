@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="IAM Trend Radar: curated identity and access management trends with maturity, impact and recommendations.">
+  <title>IAM Trend Radar</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#app">Skip to main content</a>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="#/">IAM Trend Radar</a>
+      <nav aria-label="Main">
+        <ul class="nav">
+          <li><a href="#/" data-nav="dashboard">Dashboard</a></li>
+          <li><a href="#/playbook" data-nav="playbook">Playbook</a></li>
+          <li><a href="#/feed" data-nav="feed">Latest</a></li>
+          <li><a href="#/watchlist" data-nav="watchlist">Watchlist</a></li>
+          <li><a href="#/about" data-nav="about">About</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main id="app" class="wrap" tabindex="-1">
+    <noscript><p>This site needs JavaScript enabled.</p></noscript>
+    <p class="muted">Loading&hellip;</p>
+  </main>
+  <footer class="site-footer">
+    <div class="wrap">
+      <p id="data-version" class="small">Curated summary; verify before acting.</p>
+      <p class="small">Everything stays in your browser. No tracking, no external requests.</p>
+    </div>
+  </footer>
+  <!-- data.js sets window.IAM_DATA (works on file://); dist/app.js is the classic-script build of js/ (see scripts/build-data.mjs). -->
+  <script src="data/data.js"></script>
+  <script src="dist/app.js"></script>
+</body>
+</html>

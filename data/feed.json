@@ -1,0 +1,461 @@
+{
+ "schemaVersion": 1,
+ "generatedAt": "2026-11-04T16:34:08.883Z",
+ "sources": [
+  {
+   "id": "fido",
+   "name": "FIDO Alliance",
+   "ok": true,
+   "count": 99
+  },
+  {
+   "id": "openid",
+   "name": "OpenID Foundation",
+   "ok": true,
+   "count": 10
+  },
+  {
+   "id": "nist",
+   "name": "NIST News",
+   "ok": true,
+   "count": 1
+  },
+  {
+   "id": "cisa",
+   "name": "CISA Advisories",
+   "ok": true,
+   "count": 4
+  },
+  {
+   "id": "w3c",
+   "name": "W3C News",
+   "ok": true,
+   "count": 7
+  }
+ ],
+ "items": [
+  {
+   "id": "f708m2",
+   "title": "ITBrief: HID joins FIDO Alliance board as passkeys gain traction",
+   "link": "https://fidoalliance.org/itbrief-hid-joins-fido-alliance-board-as-passkeys-gain-traction/",
+   "published": "2026-10-30T12:41:03.000Z",
+   "summary": "HID has joined the FIDO Alliance Board of Directors, with Sean Dyon serving as the company’s primary board delegate. The appointment gives HID a seat on the governing body of […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "16mek9y",
+   "title": "MobileIDWorld: Amazon Says More Than 500 Million Customers Have Enabled Passkeys",
+   "link": "https://fidoalliance.org/mobileidworld-amazon-says-more-than-500-million-customers-have-enabled-passkeys/",
+   "published": "2026-10-30T12:38:28.000Z",
+   "summary": "More than 500 million Amazon customers have now enabled passkeys on their accounts, the company says. A passkey lets them sign in with the fingerprint, face scan or lock-screen PIN […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "1uf28uv",
+   "title": "FinXTech: The Banking Industry Warms to Passkeys",
+   "link": "https://fidoalliance.org/finxtech-the-banking-industry-warms-to-passkeys/",
+   "published": "2026-10-30T12:36:25.000Z",
+   "summary": "As new forms of artificial intelligence speed up fraudsters’ ability to steal online account credentials, security experts are advising financial institutions to move away from passwords and implement passkey login […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "t0q2yr",
+   "title": "Biometric Update: FIDO Alliance counts 7 billion passkeys as adoption gains momentum",
+   "link": "https://fidoalliance.org/biometric-update-fido-alliance-counts-7-billion-passkeys-as-adoption-gains-momentum/",
+   "published": "2026-10-30T12:33:56.000Z",
+   "summary": "New Passkey Index shows 90% of accounts eligible but only 42% enrolled, as FIDO introduces deployment guidance and more companies adopt passkeys As the FIDO Alliance kicks off this year’s […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "3cxqfq",
+   "title": "Biometric Update: FIDO testing experts address deepfake threat and biometrics certification changes",
+   "link": "https://fidoalliance.org/biometric-update-fido-testing-experts-address-deepfake-threat-and-biometrics-certification-changes/",
+   "published": "2026-10-30T12:10:20.000Z",
+   "summary": "AI has upended cybersecurity and deepfakes are the form the technology most often takes in attacks on biometric processes. Reports from Biometric Update and Goode Intelligence forecast market growth of […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "1e2g58n",
+   "title": "CISA Adds Two Known Exploited Vulnerabilities to Catalog",
+   "link": "https://www.cisa.gov/news-events/alerts/2026/10/30/cisa-adds-two-known-exploited-vulnerabilities-catalog",
+   "published": "2026-10-30T12:00:00.000Z",
+   "summary": "CISA has added two new vulnerabilities to its Known Exploited Vulnerabilities (KEV) Catalog , based on evidence of active exploitation. CVE-2026-111357 Ivanti Connect Secure Missing Authentication for Critical Function Vulnerability CVE-2026-118527 Ivanti Connect Secure Generation of Predictable Num",
+   "source": "CISA Advisories",
+   "sourceId": "cisa"
+  },
+  {
+   "id": "1ur9smh",
+   "title": "Siemens Mendix SAML Module",
+   "link": "https://www.cisa.gov/news-events/ics-advisories/icsa-26-302-01",
+   "published": "2026-10-29T12:00:00.000Z",
+   "summary": "View CSAF Summary Mendix SAML module contains an authentication bypass vulnerability that could allow an unauthenticated remote attacker to gain unauthorized access by replaying a valid SAML assertion in IdP-initiated authentication flows. Siemens has released new versions for the affected products ",
+   "source": "CISA Advisories",
+   "sourceId": "cisa"
+  },
+  {
+   "id": "1urbc2w",
+   "title": "Mitsubishi Electric and Mitsubishi Electric Iconics Digital Solutions GENESIS, GENESIS64, ICONICS Suite, Hyper Historian, AnalytiX, MobileHMI, IoTWorX, MC Works64, GENESIS32 and BizViz",
+   "link": "https://www.cisa.gov/news-events/ics-advisories/icsa-26-300-02",
+   "published": "2026-10-27T12:00:00.000Z",
+   "summary": "View CSAF Summary Successful exploitation of these vulnerabilities could allow an attacker to execute arbitrary code (CVE-2023-4863), bypass authentication (CVE-2026-16436 and CVE-2026-16437), or perform arbitrary operations (CVE-2026-16438), resulting in information disclosure, tampering with, dest",
+   "source": "CISA Advisories",
+   "sourceId": "cisa"
+  },
+  {
+   "id": "1szp9s4",
+   "title": "Siemens RUGGEDCOM CROSSBOW",
+   "link": "https://www.cisa.gov/news-events/ics-advisories/icsa-26-295-12",
+   "published": "2026-10-22T12:00:00.000Z",
+   "summary": "View CSAF Summary RUGGEDCOM CROSSBOW contains multiple vulnerabilities that could allow an attacker to execute arbitrary SQL commands on the underlying database, retrieve sensitive administrative credentials, escalate privileges, and perform unauthorized operations such as modifying system configura",
+   "source": "CISA Advisories",
+   "sourceId": "cisa"
+  },
+  {
+   "id": "1qr6mdk",
+   "title": "Biometric Update: FIDO sets out certification framework for digital identity wallets",
+   "link": "https://fidoalliance.org/biometric-update-fido-sets-out-certification-framework-for-digital-identity-wallets/",
+   "published": "2026-10-21T19:22:13.000Z",
+   "summary": "FIDO Alliance is advancing its digital identity wallet certification program with two technical frameworks intended to establish common requirements for credential management and help wallets verify the identity of services requesting […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "16jf8vt",
+   "title": "Authenticate 2026 Day 3: Trusting the transaction in the agentic economy",
+   "link": "https://fidoalliance.org/authenticate-2026-day-3-trusting-the-transaction-in-the-agentic-economy/",
+   "published": "2026-10-21T15:25:47.000Z",
+   "summary": "Authenticate 2026 closes today with its busiest day yet for agentic AI. A morning session asks who’s on the hook when things go wrong, Mastercard covers Verifiable Intent, and PayPal […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "261o9m",
+   "title": "Amazon is making it easier and safer for you to access your account with passwordless sign-in",
+   "link": "https://fidoalliance.org/amazon-is-making-it-easier-and-safer-for-you-to-access-your-account-with-passwordless-sign-in-2/",
+   "published": "2026-10-20T23:52:47.000Z",
+   "summary": "More than 500 million Amazon customers are using passkeys, an easier and more secure way to sign in to your Amazon account. Key takeaways Amazon announced the rollout of passkey […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "1pgustd",
+   "title": "Defakto joins the OIDF as a Sustaining Corporate Member",
+   "link": "https://openid.net/defakto-joins-the-oidf-as-a-sustaining-corporate-member/",
+   "published": "2026-10-20T15:00:25.000Z",
+   "summary": "The OpenID Foundation is pleased to welcome Defakto Security as a new Sustaining Corporate Member. Defakto secures the non-human identities driving the next generation of cloud, automation, and AI. Global enterprises rely on Defakto to eradicate long-lived secrets in favor of short-lived, cryptograp",
+   "source": "OpenID Foundation",
+   "sourceId": "openid"
+  },
+  {
+   "id": "4jzu8d",
+   "title": "Authenticate 2026 Day 2: Building the foundation of trust for digital credentials",
+   "link": "https://fidoalliance.org/authenticate-2026-day-2-building-the-foundation-of-trust-for-digital-credentials/",
+   "published": "2026-10-20T12:54:17.000Z",
+   "summary": "By Diego Zavala Yesterday we looked at how far passkeys have come and at the new frontier ahead. Today, that frontier comes into view as we announce steps to accelerate […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "1k5a7zm",
+   "title": "FIDO Alliance Moves to Accelerate Digital Credentials Adoption at Scale",
+   "link": "https://fidoalliance.org/fido-alliance-moves-to-accelerate-digital-credentials-adoption-at-scale/",
+   "published": "2026-10-20T12:48:00.000Z",
+   "summary": "Alliance unveils public key working documents for digital wallets and launches industry engagement forum at the annual Authenticate conference Carlsbad, Calif., October 20, 2026 – The FIDO Alliance today announced […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "fk9qii",
+   "title": "Authentication Issues Cost Frontline Organizations Thousands of Working Hours Each Year According to Research from Imprivata and FIDO Alliance",
+   "link": "https://fidoalliance.org/authentication-issues-cost-frontline-organizations-thousands-of-working-hours-each-year-according-to-research-from-imprivata-and-fido-alliance/",
+   "published": "2026-10-19T13:12:21.000Z",
+   "summary": "Survey of 700 IT and security leaders reveals delayed patient care, widespread security workarounds and concern over AI-enabled impersonation Waltham, Mass. – October 19, 2026 — Authentication problems for frontline […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "ny73f0",
+   "title": "Authenticate 2026 day 1: From passkeys to the new frontier",
+   "link": "https://fidoalliance.org/authenticate-2026-day-1-from-passkeys-to-the-new-frontier/",
+   "published": "2026-10-19T13:08:27.000Z",
+   "summary": "Author: Andrew Shikiar Authenticate 2026 is underway in Carlsbad. Listening to the conversations in the session rooms and the hallways today, it is clear the conversation around authentication and passkeys […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "1g2696m",
+   "title": "Frontline Friction: The State of Authentication for Frontline Workers",
+   "link": "https://fidoalliance.org/frontline-friction-the-state-of-authentication-for-frontline-workers/",
+   "published": "2026-10-19T13:04:57.000Z",
+   "summary": "A research report by Imprivata and the FIDO Alliance Executive Summary For organizations with frontline workers, authentication friction is leading to major real-world consequences, such as delaying vital patient care, […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "qw2zgm",
+   "title": "Lessons from Denmark’s CPR breach",
+   "link": "https://openid.net/lessons-from-denmarks-cpr-breach/",
+   "published": "2026-10-16T09:09:51.000Z",
+   "summary": "Why knowledge-based authentication is inadequate and what to do instead On October 5, 2026, the Danish government announced that unauthorized parties had accessed data on about 8.8 million people in the Central Person Register (CPR), Denmark’s national civil register. The data includes the names, ad",
+   "source": "OpenID Foundation",
+   "sourceId": "openid"
+  },
+  {
+   "id": "1tuhwm6",
+   "title": "OpenID Foundation names Biometric Update as media partner",
+   "link": "https://openid.net/openid-foundation-names-biometric-update-as-media-partner/",
+   "published": "2026-10-16T08:02:00.000Z",
+   "summary": "The OpenID Foundation is pleased to announce Biometric Update as the official media partner for the forthcoming OpenID Well-Known Conference. Taking place in London on February 2-4, 2027, this is the OpenID Foundation’s first global conference. Its goal is to help digital identity and credential eco",
+   "source": "OpenID Foundation",
+   "sourceId": "openid"
+  },
+  {
+   "id": "1w610d7",
+   "title": "Passkey Index 2026",
+   "link": "https://fidoalliance.org/passkey-index-2026/",
+   "published": "2026-10-15T12:56:34.000Z",
+   "summary": "Executive Summary Passkeys have moved from deployment to adoption. While last year’s Index showed that passkeys were available to almost every user, the Passkey Index 2026 shows they are being […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "1yebzzo",
+   "title": "7 Billion Passkeys and Counting: The Next Chapter of Passwordless Authentication",
+   "link": "https://fidoalliance.org/7-billion-passkeys-and-counting-the-next-chapter-of-passwordless-authentication/",
+   "published": "2026-10-15T12:56:10.000Z",
+   "summary": "Passkeys have reached a new milestone, FIDO now estimates that 7 billion passkeys are in use worldwide. And new data suggests something even more important is happening. People aren’t just […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "x96kwe",
+   "title": "ADT CG responds to HESC research security consultation",
+   "link": "https://openid.net/adt-cg-responds-to-hesc-research-security-consultation/",
+   "published": "2026-10-15T09:03:10.000Z",
+   "summary": "How can institutions be confident about who is taking part in academic research, and whether their link to an institution is still valid? Australia currently has no common national baseline for answering that question. This is one of the key issues raised by the Australian Digital Trust Community Gr",
+   "source": "OpenID Foundation",
+   "sourceId": "openid"
+  },
+  {
+   "id": "1riz5zo",
+   "title": "The 2026 Dashlane Passkey Power 20",
+   "link": "https://fidoalliance.org/the-2026-dashlane-passkey-power-20/",
+   "published": "2026-10-13T14:24:57.000Z",
+   "summary": "About this report The 2026 Dashlane Passkey Power 20 is based on an analysis of Dashlane data encompassing millions of aggregated and anonymized web and mobile passkey authentications globally from […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "2so672",
+   "title": "ID Tech: SecuGen Unity 20 Fingerprint Security Key Gains FIDO2 Certification",
+   "link": "https://fidoalliance.org/id-tech-secugen-unity-20-fingerprint-security-key-gains-fido2-certification/",
+   "published": "2026-10-12T19:24:29.000Z",
+   "summary": "SecuGen’s Unity 20 FIDO2 fingerprint security key has gained FIDO Alliance certification, adding a biometric hardware authenticator to the company’s product range. The device creates and stores passkeys for passwordless […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "9lexrh",
+   "title": "Security Informed: Intercede Launches MyID Authenticate Passkey Solution",
+   "link": "https://fidoalliance.org/security-informed-intercede-launches-myid-authenticate-passkey-solution/",
+   "published": "2026-10-12T19:20:34.000Z",
+   "summary": "Intercede has launched MyID® Authenticate, a FIDO passkey authentication solution for government agencies and enterprises. The platform enables phishing-resistant sign-in to Windows desktops, cloud services and on-premises applications. It will […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "1m650ex",
+   "title": "OIDF publishes threat model for cross-boundary AI agents",
+   "link": "https://openid.net/oidf-publishes-threat-model-for-cross-boundary-ai-agents/",
+   "published": "2026-10-12T18:40:48.000Z",
+   "summary": "Organizations are rolling out AI agents faster than they are building the systems needed to identify those agents and control what they are allowed to do. One of the key points at which this becomes a problem is when an agent crosses a security boundary. For example, an agent hosted with one provide",
+   "source": "OpenID Foundation",
+   "sourceId": "openid"
+  },
+  {
+   "id": "a680in",
+   "title": "The OpenID Foundation responds to Australia’s privacy reform consultation",
+   "link": "https://openid.net/the-openid-foundation-responds-to-australias-privacy-reform-consultation/",
+   "published": "2026-10-12T11:26:36.000Z",
+   "summary": "The OpenID Foundation, through its Australian Digital Trust Community Group (ADT CG), has responded to the Australian Government’s consultation on the Exposure Draft Privacy Amendment (Personal Data Protection) Bill 2026. The consultation seeks to modernize and strengthen Australia’s privacy laws. T",
+   "source": "OpenID Foundation",
+   "sourceId": "openid"
+  },
+  {
+   "id": "1qyt1jx",
+   "title": "OIDF responds to EMVCo Agentic Payments framework draft",
+   "link": "https://openid.net/oidf-responds-to-emvco-agentic-payments-framework-draft/",
+   "published": "2026-10-08T20:55:45.000Z",
+   "summary": "The OpenID Foundation has submitted comments to EMVCo on the EMV® Agentic Payments – Framework for Specifications v1.0 DRAFT. As AI agents increasingly act on behalf of consumers, every payment raises an identity question: who is the agent, and what has the consumer authorized it to do? The line bet",
+   "source": "OpenID Foundation",
+   "sourceId": "openid"
+  },
+  {
+   "id": "r2waql",
+   "title": "OpenID Connect Ephemeral Subject Identifier 1.0 Final Specification Approved",
+   "link": "https://openid.net/openid-connect-ephemeral-subject-identifier-1-0-final-specification-approved/",
+   "published": "2026-10-08T12:31:33.000Z",
+   "summary": "The OpenID Foundation membership has approved the following specification as an OpenID Final Specification: OpenID Connect Ephemeral Subject Identifier 1.0: https://openid.net/specs/openid-connect-ephemeral-subject-identifier-1_0-final.html A Final Specification provides intellectual property protec",
+   "source": "OpenID Foundation",
+   "sourceId": "openid"
+  },
+  {
+   "id": "1s4fdrg",
+   "title": "First Draft Notes: Verifiable Credential Threat Models",
+   "link": "https://www.w3.org/news/2026/first-draft-notes-verifiable-credential-threat-models/",
+   "published": "2026-10-08T08:32:00.000Z",
+   "summary": "The Verifiable Credentials Working Group has published a series of W3C Working Group Note Drafts for threat models.",
+   "source": "W3C News",
+   "sourceId": "w3c"
+  },
+  {
+   "id": "jcgv76",
+   "title": "W3C issues press release about developing Verifiable Credential Barcodes",
+   "link": "https://www.w3.org/news/2026/w3c-issues-press-release-about-developing-verifiable-credential-barcodes/",
+   "published": "2026-10-07T17:50:00.000Z",
+   "summary": "In a press release we present the concept of real-time revocation that is being developed in the W3C Verifiable Credentials Barcodes specification to protect physical documents.",
+   "source": "W3C News",
+   "sourceId": "w3c"
+  },
+  {
+   "id": "36ply7",
+   "title": "Sponsor the conference where ecosystems learn to scale",
+   "link": "https://openid.net/sponsor-the-conference-where-ecosystems-learn-to-scale/",
+   "published": "2026-10-07T13:22:53.000Z",
+   "summary": "Sponsorship is now open for the inaugural OpenID Well-Known Conference. Taking place February 2-4, 2027, at the historic London landmark, County Hall, sponsors will reach a focused audience of decision makers, ecosystem leaders, and technologists from established and emerging ecosystems worldwide. T",
+   "source": "OpenID Foundation",
+   "sourceId": "openid"
+  },
+  {
+   "id": "1f7p21p",
+   "title": "Call for proposals: sharing lessons on adoption and scale",
+   "link": "https://openid.net/call-for-proposals-sharing-lessons-on-adoption-and-scale/",
+   "published": "2026-10-06T12:09:04.000Z",
+   "summary": "Moving from implementation to widespread adoption and scale is a significant challenge faced by digital identity and credential ecosystems around the world. They need to build trust and serve issuers, relying parties, and credential holders. They must also enable interoperability across sectors and ",
+   "source": "OpenID Foundation",
+   "sourceId": "openid"
+  },
+  {
+   "id": "kspnae",
+   "title": "ID Tech: IDEMIA Adds Passkeys and Restricted-Use Tokens for AI-Agent Payments",
+   "link": "https://fidoalliance.org/id-tech-idemia-adds-passkeys-and-restricted-use-tokens-for-ai-agent-payments/",
+   "published": "2026-10-05T15:36:08.000Z",
+   "summary": "IDEMIA Secure Transactions has introduced payment infrastructure for card networks that want to handle purchases initiated by AI agents. The offering combines payment tokenization, passkey-based cardholder authentication, limits on how […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "x8dzmt",
+   "title": "ID Tech: Thales Brings Agent Access Controls to Google Cloud Gemini Enterprise",
+   "link": "https://fidoalliance.org/id-tech-thales-brings-agent-access-controls-to-google-cloud-gemini-enterprise/",
+   "published": "2026-10-05T15:34:23.000Z",
+   "summary": "Thales is integrating its AI Security Fabric with Google Cloud Gemini Enterprise to apply security policies to interactions among enterprise users, AI agents, models, data and connected tools. The collaboration […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "ncn4qk",
+   "title": "TWIF: Whose Agent is it Anyway? | This Week in Fraud",
+   "link": "https://fidoalliance.org/twif-whose-agent-is-it-anyway-this-week-in-fraud/",
+   "published": "2026-10-05T15:30:45.000Z",
+   "summary": "Big Story: It’s 10pm. Do you know what your AI agent is buying? On Sept. 22, six banks (ASB Bank, Bank of America, Capital One, Commonwealth Bank of Australia, ING, […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "1je6yh3",
+   "title": "IoT News: WBA and FIDO test zero-touch IoT Wi-Fi onboarding",
+   "link": "https://fidoalliance.org/iot-news-wba-and-fido-test-zero-touch-iot-wi-fi-onboarding/",
+   "published": "2026-09-28T12:27:17.000Z",
+   "summary": "Industrial operators can automate IoT onboarding across Wi-Fi networks through a joint specification from the Wireless Broadband Alliance (WBA) and FIDO Alliance. The framework pairs the WBA’s federated OpenRoaming architecture with FIDO Device […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "wf2y4l",
+   "title": "Tech Times: Visa Payment Passkey Goes Live at Five India State Banks: OTP Attack Surface Eliminated",
+   "link": "https://fidoalliance.org/tech-times-visa-payment-passkey-goes-live-at-five-india-state-banks-otp-attack-surface-eliminated/",
+   "published": "2026-09-28T12:25:41.000Z",
+   "summary": "India’s five-decade-old authentication habit — waiting for a six-digit code on a phone — got its first major structural challenge at the country’s public-sector banks last week, when Visa and […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "130g7xs",
+   "title": "FinTech Futures: Sibos 2026: Digital finance in an AI-driven economy – when the agent does the buying, who owns the customer?",
+   "link": "https://fidoalliance.org/fintech-futures-sibos-2026-digital-finance-in-an-ai-driven-economy-when-the-agent-does-the-buying-who-owns-the-customer/",
+   "published": "2026-09-28T12:23:28.000Z",
+   "summary": "By shaping the standards of identity, control, and compliance today, financial institutions can ensure they remain the indispensable anchors of trust in the agentic economy of tomorrow. For the past […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "iih9ny",
+   "title": "Payments Dive: FIDO wrestles with agentic trust",
+   "link": "https://fidoalliance.org/payments-dive-fido-wrestles-with-agentic-trust/",
+   "published": "2026-09-28T12:12:36.000Z",
+   "summary": "The industry consortium and payments players are considering standards for agentic commerce, particularly for verifying identity. To usher in the era of agentic commerce, payments players, tech companies and other […]",
+   "source": "FIDO Alliance",
+   "sourceId": "fido"
+  },
+  {
+   "id": "14nxllt",
+   "title": "First Public Working Draft: Bitstring Status List v1.1",
+   "link": "https://www.w3.org/news/2026/first-public-working-draft-bitstring-status-list-v1-1/",
+   "published": "2026-09-24T08:28:00.000Z",
+   "summary": "This specification describes a privacy-preserving, space-efficient, and high-performance mechanism for publishing status information such as suspension or revocation of Verifiable Credentials through use of bitstrings.",
+   "source": "W3C News",
+   "sourceId": "w3c"
+  },
+  {
+   "id": "1gioqgg",
+   "title": "Group Note Draft: Verifiable Credentials Data Model Threat Model v2.1",
+   "link": "https://www.w3.org/news/2026/group-note-draft-verifiable-credentials-data-model-threat-model-v2-1/",
+   "published": "2026-09-24T08:12:00.000Z",
+   "summary": "This document describes a threat model for the Verifiable Credentials Data Model specification.",
+   "source": "W3C News",
+   "sourceId": "w3c"
+  },
+  {
+   "id": "k1s3ys",
+   "title": "NIST Finalizes Guidelines on Protecting Online Identity and Access Tokens From Misuse",
+   "link": "https://www.nist.gov/news-events/news/2026/09/nist-finalizes-guidelines-protecting-online-identity-and-access-tokens",
+   "published": "2026-09-15T12:00:00.000Z",
+   "summary": "The finalized publication is designed to help organizations take effective steps to avoid exposing tokens to attackers.",
+   "source": "NIST News",
+   "sourceId": "nist"
+  },
+  {
+   "id": "7j5vi7",
+   "title": "First Public Working Draft: Web Authentication: An API for accessing Public Key Credentials Level 4",
+   "link": "https://www.w3.org/news/2026/first-public-working-draft-web-authentication-an-api-for-accessing-public-key-credentials-level-4/",
+   "published": "2026-09-15T06:07:00.000Z",
+   "summary": "This specification defines an API enabling the creation and use of strong, attested, scoped, public key-based credentials by web applications, for the purpose of strongly authenticating users.",
+   "source": "W3C News",
+   "sourceId": "w3c"
+  },
+  {
+   "id": "ui30jt",
+   "title": "Web Authentication: An API for accessing Public Key Credentials Level 3 is now a W3C Recommendation",
+   "link": "https://www.w3.org/news/2026/web-authentication-an-api-for-accessing-public-key-credentials-level-3-is-now-a-w3c-recommendation/",
+   "published": "2026-08-25T06:44:00.000Z",
+   "summary": "This specification defines an API enabling the creation and use of strong, attested, scoped, public key-based credentials by web applications, for the purpose of strongly authenticating users.",
+   "source": "W3C News",
+   "sourceId": "w3c"
+  },
+  {
+   "id": "n09eb",
+   "title": "Group Note Draft: Verifiable Credentials Overview v1.1",
+   "link": "https://www.w3.org/news/2026/group-note-draft-verifiable-credentials-overview-v1-1/",
+   "published": "2026-07-30T08:20:00.000Z",
+   "summary": "The family of W3C Recommendations for Verifiable Credentials, described in this overview document, provides a mechanism to express these sorts of credentials on the Web in a way that is cryptographically secure, privacy respecting, and machine-verifiable.",
+   "source": "W3C News",
+   "sourceId": "w3c"
+  }
+ ]
+}
