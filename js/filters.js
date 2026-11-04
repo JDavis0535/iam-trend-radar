@@ -13,6 +13,12 @@ export function defaultFilters() {
   return { category: '', maturity: '', impact: '', momentum: '', text: '', watchOnly: false, sort: 'impact' };
 }
 
+/** Number of active trend filters: category, maturity, impact, momentum and watchlist-only. Search text and sort are not counted. */
+export function countActive(filters) {
+  const f = { ...defaultFilters(), ...(filters || {}) };
+  return ['category', 'maturity', 'impact', 'momentum'].filter((k) => f[k]).length + (f.watchOnly ? 1 : 0);
+}
+
 export function defaultRecFilters() {
   return { horizon: '', effort: '', impact: '', trendId: '', quickWins: false, sort: 'priority' };
 }

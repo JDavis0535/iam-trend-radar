@@ -66,22 +66,22 @@ async function main() {
   check('watchlist persists across reload', (await ev(`document.querySelector('button[data-watch="${firstId}"]').getAttribute('aria-pressed')`)) === 'true');
 
   // --- filters
-  await ev(`(()=>{const s=document.getElementById('f-impact'); s.value='transformative'; s.dispatchEvent(new Event('input',{bubbles:true}));})()`); await sleep(100);
+  await ev(`document.querySelector('input[name=impact][value=transformative]').click()`); await sleep(100);
   const cnt = await ev('document.getElementById("result-count").textContent');
   check('filter updates result count', /^1 of 10/.test(cnt), cnt);
   await ev(`(()=>{const s=document.getElementById('f-text'); s.value='zzzznomatch'; s.dispatchEvent(new Event('input',{bubbles:true}));})()`); await sleep(100);
   check('empty state offers Clear filters', (await ev('!!document.querySelector("#results [data-action=clear-filters]")')) === true);
   await ev('document.querySelector("#results [data-action=clear-filters]").click()'); await sleep(150);
   check('clear filters: focus moves to search box', (await ev('document.activeElement.id')) === 'f-text', await ev('document.activeElement.tagName+"#"+document.activeElement.id'));
-  check('clear filters: all 10 shown, controls reset', (await ev('document.querySelectorAll("#results .card").length')) === 10 && (await ev('document.getElementById("f-impact").value')) === '');
+  check('clear filters: all 10 shown, controls reset', (await ev('document.querySelectorAll("#results .card").length')) === 10 && (await ev('document.querySelector("input[name=impact]:checked").value')) === '');
 
   // --- filter persistence across detail nav + back
-  await ev(`(()=>{const s=document.getElementById('f-maturity'); s.value='growing'; s.dispatchEvent(new Event('input',{bubbles:true}));})()`); await sleep(100);
+  await ev(`document.querySelector('input[name=maturity][value=growing]').click()`); await sleep(100);
   const n1 = await ev('document.querySelectorAll("#results .card").length');
   await ev('document.querySelector("#results .card a").click()'); await sleep(300);
   check('detail view opens, h1 focused', (await ev('location.hash')).startsWith('#/trend/') && (await ev('document.activeElement.tagName')) === 'H1');
   await ev('history.back()'); await sleep(300);
-  check('filters persist after back (AC3)', (await ev('document.getElementById("f-maturity").value')) === 'growing' && (await ev('document.querySelectorAll("#results .card").length')) === n1);
+  check('filters persist after back (AC3)', (await ev('document.querySelector("input[name=maturity]:checked").value')) === 'growing' && (await ev('document.querySelectorAll("#results .card").length')) === n1);
   await ev('document.querySelector("#filter-form [data-action=clear-filters]").click()'); await sleep(150);
 
   // --- detail page links
@@ -166,6 +166,26 @@ async function main() {
   }
   await send('Emulation.clearDeviceMetricsOverride');
 
+
+  // --- dashboard filter bar: always-open panel on desktop, collapsible on mobile, sticky bar, active count
+  await go('#/'); await sleep(150);
+  check('desktop: Clear filters is not visible when nothing is filtered', (await ev(`getComputedStyle(document.getElementById('clear-filters')).display`)) === 'none');
+  check('desktop: filter toggle hidden and panel visible', (await ev(`(()=>{const t=document.getElementById('filter-toggle'),p=document.getElementById('filter-panel');return getComputedStyle(t).display==='none'&&getComputedStyle(p).display!=='none'})()`)) === true);
+  await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 800, deviceScaleFactor: 1, mobile: true });
+  await go('#/'); await sleep(200);
+  check('mobile: panel collapsed behind a visible toggle (aria-expanded=false)', (await ev(`(()=>{const t=document.getElementById('filter-toggle'),p=document.getElementById('filter-panel');return getComputedStyle(t).display!=='none'&&getComputedStyle(p).display==='none'&&t.getAttribute('aria-expanded')==='false'})()`)) === true);
+  await ev(`document.getElementById('filter-toggle').click()`); await sleep(100);
+  check('mobile: toggle opens the panel (aria-expanded=true)', (await ev(`(()=>{const t=document.getElementById('filter-toggle'),p=document.getElementById('filter-panel');return getComputedStyle(p).display!=='none'&&t.getAttribute('aria-expanded')==='true'})()`)) === true);
+  await ev(`document.querySelector('input[name=impact][value=high]').click()`); await sleep(100);
+  check('toggle label shows active filter count', (await ev(`document.getElementById('filter-toggle').textContent.trim()`)) === 'Filters (1)');
+  check('chips filter the landscape too', (await ev(`document.querySelectorAll('#landscape-body .dot').length`)) === (await ev(`document.querySelectorAll('#results .card').length`)));
+  check('Clear filters button appears when a filter is active', (await ev(`getComputedStyle(document.getElementById('clear-filters')).display`)) !== 'none');
+  await ev(`window.scrollTo(0, 1200)`); await sleep(200);
+  const barTop = await ev(`document.querySelector('.filter-bar').getBoundingClientRect().top`);
+  check('filter bar stays stuck to the top while scrolling', Math.abs(barTop) < 2, 'top=' + barTop);
+  await ev(`document.getElementById('clear-filters').click()`); await sleep(200);
+  check('clear: count label and button reset', (await ev(`document.getElementById('filter-toggle').textContent.trim()`)) === 'Filters' && (await ev(`getComputedStyle(document.getElementById('clear-filters')).display`)) === 'none');
+  await send('Emulation.clearDeviceMetricsOverride');
 
   // --- external requests
   const ext = await ev('performance.getEntriesByType("resource").map(r=>r.name).filter(n=>!n.startsWith(location.origin)&&!n.startsWith("file:"))');

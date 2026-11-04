@@ -22,18 +22,26 @@ export function labelOf(list, id) {
 
 const GLYPHS = {
   maturity: { emerging: '◔', growing: '◑', mainstream: '◕', established: '●' },
-  impact: { low: '▂', medium: '▄', high: '▆', transformative: '█' },
   momentum: { rising: '↗', steady: '→', cooling: '↘' },
-  horizon: { now: '▶', next: '▷', later: '○' },
-  effort: { low: '▂', medium: '▄', high: '▆' }
+  horizon: { now: '▶', next: '▷', later: '○' }
 };
+
+// Impact and effort are drawn as small CSS meters (filled bars) rather than block characters, which render
+// inconsistently across fonts. level = filled bars, total = bars drawn.
+const METER = { impact: { total: 4, level: { low: 1, medium: 2, high: 3, transformative: 4 } }, effort: { total: 3, level: { low: 1, medium: 2, high: 3 } } };
+
+function meter(kind, id) {
+  const m = METER[kind];
+  const n = (m && m.level[id]) || 0;
+  return `<span class="bars" aria-hidden="true">${Array.from({ length: m.total }, (_, i) => `<i${i < n ? ' class="on"' : ''}></i>`).join('')}</span>`;
+}
 
 const KIND_LABELS = { maturity: 'Maturity', impact: 'Impact', momentum: 'Momentum', horizon: 'Horizon', effort: 'Effort' };
 
 /** Badge with a glyph, a visible text label and a screen-reader prefix. Never color-only. */
 export function badge(kind, id, taxonomy) {
   const text = labelOf(taxonomy && taxonomy[kind], id);
-  const glyph = (GLYPHS[kind] && GLYPHS[kind][id]) || '•';
+  const glyph = METER[kind] ? meter(kind, id) : esc((GLYPHS[kind] && GLYPHS[kind][id]) || '•');
   return `<span class="badge badge-${esc(kind)} badge-v-${esc(id)}"><span aria-hidden="true">${glyph}</span> <span class="vh">${esc(KIND_LABELS[kind] || kind)}: </span>${esc(text)}</span>`;
 }
 
@@ -98,6 +106,37 @@ export function options(items, selected, allLabel) {
   const opts = allLabel == null ? [] : [`<option value=""${selected ? '' : ' selected'}>${esc(allLabel)}</option>`];
   for (const it of items) opts.push(`<option value="${esc(it.id)}"${it.id === selected ? ' selected' : ''}>${esc(it.label)}</option>`);
   return opts.join('');
+}
+
+/**
+ * Maturity x impact landscape as an accessible table (columns: maturity, rows: impact, top = highest).
+ * Each trend is a link; momentum shows as an arrow plus screen-reader text. Returns '' when there are no trends.
+ */
+export function landscape(trends, tx) {
+  if (!trends.length) return '';
+  const cols = tx.maturity;
+  const rows = [...tx.impact].reverse();
+  const dot = (t) => `<a class="dot dot-${esc(t.momentum)}" href="#/trend/${encodeURIComponent(t.id)}"><span aria-hidden="true">${esc((GLYPHS.momentum && GLYPHS.momentum[t.momentum]) || '•')}</span> ${esc(t.title)}<span class="vh"> (Momentum: ${esc(labelOf(tx.momentum, t.momentum))})</span></a>`;
+  const body = rows.map((imp) => {
+    const cells = cols.map((mat) => {
+      const ts = trends.filter((t) => t.maturity === mat.id && t.impact === imp.id);
+      return { mat, ts };
+    });
+    const any = cells.some((c) => c.ts.length);
+    return `<tr class="imp-${esc(imp.id)}${any ? '' : ' row-empty'}"><th scope="row">${esc(imp.label)}</th>${cells.map((c) => `<td data-label="${esc(c.mat.label)}"${c.ts.length ? '' : ' class="empty-cell"'}>${c.ts.map(dot).join('')}</td>`).join('')}</tr>`;
+  }).join('');
+  return `<table class="matrix"><caption class="vh">Trends by maturity (columns) and impact (rows)</caption><thead><tr><td class="corner"></td>${cols.map((c) => `<th scope="col">${esc(c.label)}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+/** Radio group drawn as chips: a fieldset with a legend, an "all" option (value "") and one option per item. */
+export function chipRadios(name, legend, items, selected, allLabel) {
+  const opt = (value, label) => `<label class="opt"><input type="radio" name="${esc(name)}" value="${esc(value)}"${value === (selected || '') ? ' checked' : ''}><span>${esc(label)}</span></label>`;
+  return `<fieldset class="chipset"><legend>${esc(legend)}</legend><div class="opts">${opt('', allLabel)}${items.map((it) => opt(it.id, it.label)).join('')}</div></fieldset>`;
+}
+
+/** Single checkbox drawn as a toggle chip. */
+export function chipCheck(name, id, label, checked) {
+  return `<label class="opt"><input type="checkbox" id="${esc(id)}" name="${esc(name)}"${checked ? ' checked' : ''}><span>${esc(label)}</span></label>`;
 }
 
 export function emptyState(message, actionHtml) {

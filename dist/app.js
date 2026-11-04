@@ -17,6 +17,12 @@ function defaultFilters() {
   return { category: '', maturity: '', impact: '', momentum: '', text: '', watchOnly: false, sort: 'impact' };
 }
 
+/** Number of active trend filters: category, maturity, impact, momentum and watchlist-only. Search text and sort are not counted. */
+function countActive(filters) {
+  const f = { ...defaultFilters(), ...(filters || {}) };
+  return ['category', 'maturity', 'impact', 'momentum'].filter((k) => f[k]).length + (f.watchOnly ? 1 : 0);
+}
+
 function defaultRecFilters() {
   return { horizon: '', effort: '', impact: '', trendId: '', quickWins: false, sort: 'priority' };
 }
@@ -121,18 +127,26 @@ function labelOf(list, id) {
 
 const GLYPHS = {
   maturity: { emerging: '◔', growing: '◑', mainstream: '◕', established: '●' },
-  impact: { low: '▂', medium: '▄', high: '▆', transformative: '█' },
   momentum: { rising: '↗', steady: '→', cooling: '↘' },
-  horizon: { now: '▶', next: '▷', later: '○' },
-  effort: { low: '▂', medium: '▄', high: '▆' }
+  horizon: { now: '▶', next: '▷', later: '○' }
 };
+
+// Impact and effort are drawn as small CSS meters (filled bars) rather than block characters, which render
+// inconsistently across fonts. level = filled bars, total = bars drawn.
+const METER = { impact: { total: 4, level: { low: 1, medium: 2, high: 3, transformative: 4 } }, effort: { total: 3, level: { low: 1, medium: 2, high: 3 } } };
+
+function meter(kind, id) {
+  const m = METER[kind];
+  const n = (m && m.level[id]) || 0;
+  return `<span class="bars" aria-hidden="true">${Array.from({ length: m.total }, (_, i) => `<i${i < n ? ' class="on"' : ''}></i>`).join('')}</span>`;
+}
 
 const KIND_LABELS = { maturity: 'Maturity', impact: 'Impact', momentum: 'Momentum', horizon: 'Horizon', effort: 'Effort' };
 
 /** Badge with a glyph, a visible text label and a screen-reader prefix. Never color-only. */
 function badge(kind, id, taxonomy) {
   const text = labelOf(taxonomy && taxonomy[kind], id);
-  const glyph = (GLYPHS[kind] && GLYPHS[kind][id]) || '•';
+  const glyph = METER[kind] ? meter(kind, id) : esc((GLYPHS[kind] && GLYPHS[kind][id]) || '•');
   return `<span class="badge badge-${esc(kind)} badge-v-${esc(id)}"><span aria-hidden="true">${glyph}</span> <span class="vh">${esc(KIND_LABELS[kind] || kind)}: </span>${esc(text)}</span>`;
 }
 
@@ -197,6 +211,37 @@ function options(items, selected, allLabel) {
   const opts = allLabel == null ? [] : [`<option value=""${selected ? '' : ' selected'}>${esc(allLabel)}</option>`];
   for (const it of items) opts.push(`<option value="${esc(it.id)}"${it.id === selected ? ' selected' : ''}>${esc(it.label)}</option>`);
   return opts.join('');
+}
+
+/**
+ * Maturity x impact landscape as an accessible table (columns: maturity, rows: impact, top = highest).
+ * Each trend is a link; momentum shows as an arrow plus screen-reader text. Returns '' when there are no trends.
+ */
+function landscape(trends, tx) {
+  if (!trends.length) return '';
+  const cols = tx.maturity;
+  const rows = [...tx.impact].reverse();
+  const dot = (t) => `<a class="dot dot-${esc(t.momentum)}" href="#/trend/${encodeURIComponent(t.id)}"><span aria-hidden="true">${esc((GLYPHS.momentum && GLYPHS.momentum[t.momentum]) || '•')}</span> ${esc(t.title)}<span class="vh"> (Momentum: ${esc(labelOf(tx.momentum, t.momentum))})</span></a>`;
+  const body = rows.map((imp) => {
+    const cells = cols.map((mat) => {
+      const ts = trends.filter((t) => t.maturity === mat.id && t.impact === imp.id);
+      return { mat, ts };
+    });
+    const any = cells.some((c) => c.ts.length);
+    return `<tr class="imp-${esc(imp.id)}${any ? '' : ' row-empty'}"><th scope="row">${esc(imp.label)}</th>${cells.map((c) => `<td data-label="${esc(c.mat.label)}"${c.ts.length ? '' : ' class="empty-cell"'}>${c.ts.map(dot).join('')}</td>`).join('')}</tr>`;
+  }).join('');
+  return `<table class="matrix"><caption class="vh">Trends by maturity (columns) and impact (rows)</caption><thead><tr><td class="corner"></td>${cols.map((c) => `<th scope="col">${esc(c.label)}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+/** Radio group drawn as chips: a fieldset with a legend, an "all" option (value "") and one option per item. */
+function chipRadios(name, legend, items, selected, allLabel) {
+  const opt = (value, label) => `<label class="opt"><input type="radio" name="${esc(name)}" value="${esc(value)}"${value === (selected || '') ? ' checked' : ''}><span>${esc(label)}</span></label>`;
+  return `<fieldset class="chipset"><legend>${esc(legend)}</legend><div class="opts">${opt('', allLabel)}${items.map((it) => opt(it.id, it.label)).join('')}</div></fieldset>`;
+}
+
+/** Single checkbox drawn as a toggle chip. */
+function chipCheck(name, id, label, checked) {
+  return `<label class="opt"><input type="checkbox" id="${esc(id)}" name="${esc(name)}"${checked ? ' checked' : ''}><span>${esc(label)}</span></label>`;
 }
 
 function emptyState(message, actionHtml) {
@@ -402,12 +447,22 @@ function makeCtx() {
 }
 
 /* ---- js/views/dashboard.js ---- */
-// views/dashboard.js - trend card grid with combined filters, search, sort and a live result count.
+// views/dashboard.js - stat tiles, maturity x impact landscape and trend card grid, driven by combined filters, search, sort and a live result count.
 // Filters live in store.state.filters (persisted), so they survive navigation to a trend and back.
 
 
 
 
+
+// Whether the filter panel is open on narrow screens (on wide screens it is always shown). Module-level so it
+// survives the re-render that follows a watch toggle or "Clear filters".
+let panelOpen = false;
+
+/** Number of active filters, and whether anything (including search text) can be cleared. */
+function filterSummary() {
+  const n = countActive(state.filters);
+  return { n, any: n > 0 || state.filters.text.trim() !== '' };
+}
 
 function dashboardResults() {
   const ctx = makeCtx();
@@ -416,7 +471,7 @@ function dashboardResults() {
   const html = list.length
     ? `<ul class="grid" aria-label="Trends">${list.map((t) => trendCard(t, ctx)).join('')}</ul>`
     : emptyState('No trends match these filters.', '<p><button type="button" class="btn" data-action="clear-filters">Clear filters</button></p>');
-  return { count, html };
+  return { count, html, list };
 }
 
 function renderDashboard() {
@@ -424,6 +479,8 @@ function renderDashboard() {
   const tx = state.taxonomy;
   const res = dashboardResults();
   const flagged = state.trends.filter((t) => t.needsVerification).length;
+  const rising = state.trends.filter((t) => t.momentum === 'rising').length;
+  const sum = filterSummary();
   const sorts = [
     { id: 'impact', label: 'Impact (high first)' },
     { id: 'maturity', label: 'Maturity (most mature first)' },
@@ -432,25 +489,35 @@ function renderDashboard() {
   ];
   return {
     title: 'Dashboard',
-    html: `<h1 tabindex="-1">IAM Trend Radar</h1>
-<p class="lead">What is changing in identity and access management, how mature and impactful it is, and what to do about it.</p>
-<ul class="stats" aria-label="Dataset summary">
-  <li><strong>${state.trends.length}</strong> trends</li>
-  <li><strong>${state.recommendations.length}</strong> recommendations</li>
-  <li><strong>${flagged}</strong> need verification</li>
-  <li>Data updated <strong>${esc(state.meta.lastUpdated)}</strong></li>
+    html: `<h1 tabindex="-1">What is changing in identity and access</h1>
+<p class="lead">How mature and impactful each trend is, and what to do about it.</p>
+<ul class="tiles" aria-label="Dataset summary">
+  <li class="tile"><strong>${state.trends.length}</strong><span>Trends</span></li>
+  <li class="tile"><strong>${state.recommendations.length}</strong><span>Recommendations</span></li>
+  <li class="tile"><strong>${rising}</strong><span>Rising momentum</span></li>
+  <li class="tile"><strong>${esc(state.meta.lastUpdated)}</strong><span>Data updated</span></li>${flagged ? `
+  <li class="tile tile-warn"><strong>${flagged}</strong><span>Need verification</span></li>` : ''}
 </ul>
-<form class="filters" id="filter-form" role="search" aria-label="Filter trends" autocomplete="off">
-  <div class="field field-wide"><label for="f-text">Search</label><input type="search" id="f-text" name="text" value="${esc(f.text)}" placeholder="Title, summary, standard"></div>
-  <div class="field"><label for="f-category">Category</label><select id="f-category" name="category">${options(tx.categories, f.category, 'All categories')}</select></div>
-  <div class="field"><label for="f-maturity">Maturity</label><select id="f-maturity" name="maturity">${options(tx.maturity, f.maturity, 'All maturities')}</select></div>
-  <div class="field"><label for="f-impact">Impact</label><select id="f-impact" name="impact">${options(tx.impact, f.impact, 'All impacts')}</select></div>
-  <div class="field"><label for="f-momentum">Momentum</label><select id="f-momentum" name="momentum">${options(tx.momentum, f.momentum, 'All momentum')}</select></div>
-  <div class="field"><label for="f-sort">Sort by</label><select id="f-sort" name="sort">${options(sorts, f.sort, null)}</select></div>
-  <div class="field field-check"><label><input type="checkbox" id="f-watch" name="watchOnly"${f.watchOnly ? ' checked' : ''}> Watchlist only</label></div>
-  <div class="field field-check"><button type="button" class="btn" data-action="clear-filters">Clear filters</button></div>
+<form class="dash-filters${panelOpen ? ' open' : ''}" id="filter-form" role="search" aria-label="Filter trends" autocomplete="off">
+  <div class="filter-bar">
+    <div class="bar-search"><label for="f-text" class="vh">Search trends</label><input type="search" id="f-text" name="text" value="${esc(f.text)}" placeholder="Search title, summary, standard"></div>
+    <button type="button" class="btn btn-compact filter-toggle" id="filter-toggle" aria-expanded="${panelOpen}" aria-controls="filter-panel">Filters<span id="filter-count">${sum.n ? ` (${sum.n})` : ''}</span></button>
+    <div class="bar-sort"><label for="f-sort" class="vh">Sort by</label><select id="f-sort" name="sort">${options(sorts, f.sort, null)}</select></div>
+    <p id="result-count" class="result-count" role="status" aria-live="polite">${esc(res.count)}</p>
+  </div>
+  <div class="filter-panel" id="filter-panel">
+    <div class="field"><label for="f-category">Category</label><select id="f-category" name="category">${options(tx.categories, f.category, 'All categories')}</select></div>
+    ${chipRadios('maturity', 'Maturity', tx.maturity, f.maturity, 'All')}
+    ${chipRadios('impact', 'Impact', tx.impact, f.impact, 'All')}
+    ${chipRadios('momentum', 'Momentum', tx.momentum, f.momentum, 'All')}
+    <div class="panel-actions">${chipCheck('watchOnly', 'f-watch', '★ Watchlist only', f.watchOnly)}<button type="button" class="btn btn-compact" id="clear-filters" data-action="clear-filters"${sum.any ? '' : ' hidden'}>Clear filters</button></div>
+  </div>
 </form>
-<p id="result-count" class="result-count" role="status" aria-live="polite">${esc(res.count)}</p>
+<section class="landscape" id="landscape" aria-labelledby="h-landscape"${res.list.length ? '' : ' hidden'}>
+  <h2 id="h-landscape">Landscape</h2>
+  <p class="small muted">Maturity runs left to right and impact runs bottom to top. Each trend is a link, and the arrow shows momentum. The filters above apply here too.</p>
+  <div id="landscape-body">${landscape(res.list, tx)}</div>
+</section>
 <h2 class="vh">Trends</h2>
 <div id="results">${res.html}</div>`
   };
@@ -462,6 +529,11 @@ function bindDashboard(root, api) {
     const r = dashboardResults();
     root.querySelector('#result-count').textContent = r.count;
     root.querySelector('#results').innerHTML = r.html;
+    root.querySelector('#landscape-body').innerHTML = landscape(r.list, state.taxonomy);
+    root.querySelector('#landscape').hidden = r.list.length === 0;
+    const sum = filterSummary();
+    root.querySelector('#filter-count').textContent = sum.n ? ` (${sum.n})` : '';
+    root.querySelector('#clear-filters').hidden = !sum.any;
   };
   form.addEventListener('input', () => {
     const d = new FormData(form);
@@ -479,6 +551,12 @@ function bindDashboard(root, api) {
     update();
   });
   form.addEventListener('submit', (e) => e.preventDefault());
+  const toggle = root.querySelector('#filter-toggle');
+  toggle.addEventListener('click', () => {
+    panelOpen = !panelOpen;
+    form.classList.toggle('open', panelOpen);
+    toggle.setAttribute('aria-expanded', String(panelOpen));
+  });
   root.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-action="clear-filters"]');
     if (!btn) return;
