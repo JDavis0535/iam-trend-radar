@@ -11,3 +11,9 @@ docs/README.md
 
 # Local agent tooling (skills installed into the project), not part of the published site
 .claude/
+
+# Impeccable working files (comps, captures, build state, decision-page state)
+.impeccable/mocks/
+.impeccable/review/
+.impeccable/build/
+.impeccable/questions/

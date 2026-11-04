@@ -3,7 +3,7 @@
 
 import { state, makeCtx } from '../store.js';
 import { sortRecs } from '../filters.js';
-import { esc, safeUrl, icon, badge, categoryChips, verificationBadge, watchButton, dateLine, recCard, labelOf } from '../ui.js';
+import { esc, safeUrl, icon, valueMark, categoryChips, verificationBadge, watchButton, recTable, labelOf } from '../ui.js';
 
 function sourceItem(s) {
   const url = safeUrl(s.url);
@@ -31,8 +31,13 @@ export function renderTrend(id) {
 <h1 tabindex="-1">${esc(t.title)}</h1>
 <p class="chips">${categoryChips(t, tx)}</p>
 <div class="trend-head">
-  <p class="badges">${badge('maturity', t.maturity, tx)} ${badge('impact', t.impact, tx)} ${badge('momentum', t.momentum, tx)} ${verificationBadge(t)}</p>
-  <div class="trend-actions"><p class="small">${dateLine(t, ctx.isStale(t.lastUpdated))}</p>${watchButton(t.id, ctx.isWatched(t.id), t.title)}</div>
+  <dl class="spec-head">
+    <div><dt>Status</dt><dd>${valueMark('maturity', t.maturity, tx)}</dd></div>
+    <div><dt>Impact</dt><dd>${valueMark('impact', t.impact, tx)}</dd></div>
+    <div><dt>Momentum</dt><dd>${valueMark('momentum', t.momentum, tx)}</dd></div>
+    <div><dt>This review</dt><dd><time datetime="${esc(t.lastUpdated)}">${esc(t.lastUpdated)}</time>${ctx.isStale(t.lastUpdated) ? ' <span class="badge badge-warn">May be stale</span>' : ''}</dd></div>
+  </dl>
+  <div class="trend-actions">${verificationBadge(t)}${watchButton(t.id, ctx.isWatched(t.id), t.title)}</div>
 </div>
 ${verification}
 <div class="detail">
@@ -41,7 +46,7 @@ ${verification}
     <section aria-labelledby="h-why"><h2 id="h-why">Why it matters</h2><p>${esc(t.whyItMatters)}</p></section>
     <section aria-labelledby="h-risks"><h2 id="h-risks">Risks and challenges</h2>${list(t.risks)}</section>
     <section aria-labelledby="h-recs"><h2 id="h-recs">Recommendations</h2>
-      <ul class="rec-list" aria-label="Recommendations for this trend">${recs.map((r) => recCard(r, ctx)).join('')}</ul></section>
+      ${recs.length ? recTable(recs, ctx, 'Recommendations for this trend') : '<p class="muted">None listed.</p>'}</section>
     <section aria-labelledby="h-rel"><h2 id="h-rel">Related trends</h2>${related.length
       ? `<ul>${related.map((r) => `<li><a href="#/trend/${encodeURIComponent(r.id)}">${esc(r.title)}</a> <span class="muted small">(${esc(labelOf(tx.categories, r.categories[0]))})</span></li>`).join('')}</ul>`
       : '<p class="muted">None listed.</p>'}</section>

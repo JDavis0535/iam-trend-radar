@@ -45,7 +45,7 @@ async function main() {
 
   await nav(base);
   await ev('localStorage.clear()'); await nav(base);
-  check('dashboard renders 10 cards', (await ev('document.querySelectorAll("#results .card").length')) === 10);
+  check('dashboard renders 10 trend rows', (await ev('document.querySelectorAll("#results .trow").length')) === 10);
   check('IAM_DATA bundle used (no fetch needed)', (await ev('!!window.IAM_DATA')) === true);
 
   // --- watch toggle + focus (Builder-flagged risk)
@@ -73,15 +73,15 @@ async function main() {
   check('empty state offers Clear filters', (await ev('!!document.querySelector("#results [data-action=clear-filters]")')) === true);
   await ev('document.querySelector("#results [data-action=clear-filters]").click()'); await sleep(150);
   check('clear filters: focus moves to search box', (await ev('document.activeElement.id')) === 'f-text', await ev('document.activeElement.tagName+"#"+document.activeElement.id'));
-  check('clear filters: all 10 shown, controls reset', (await ev('document.querySelectorAll("#results .card").length')) === 10 && (await ev('document.querySelector("input[name=impact]:checked").value')) === '');
+  check('clear filters: all 10 shown, controls reset', (await ev('document.querySelectorAll("#results .trow").length')) === 10 && (await ev('document.querySelector("input[name=impact]:checked").value')) === '');
 
   // --- filter persistence across detail nav + back
   await ev(`document.querySelector('input[name=maturity][value=growing]').click()`); await sleep(100);
-  const n1 = await ev('document.querySelectorAll("#results .card").length');
-  await ev('document.querySelector("#results .card a").click()'); await sleep(300);
+  const n1 = await ev('document.querySelectorAll("#results .trow").length');
+  await ev('document.querySelector("#results .trow a").click()'); await sleep(300);
   check('detail view opens, h1 focused', (await ev('location.hash')).startsWith('#/trend/') && (await ev('document.activeElement.tagName')) === 'H1');
   await ev('history.back()'); await sleep(300);
-  check('filters persist after back (AC3)', (await ev('document.querySelector("input[name=maturity]:checked").value')) === 'growing' && (await ev('document.querySelectorAll("#results .card").length')) === n1);
+  check('filters persist after back (AC3)', (await ev('document.querySelector("input[name=maturity]:checked").value')) === 'growing' && (await ev('document.querySelectorAll("#results .trow").length')) === n1);
   await ev('document.querySelector("#filter-form [data-action=clear-filters]").click()'); await sleep(150);
 
   // --- detail page links
@@ -96,16 +96,18 @@ async function main() {
 
   // --- playbook
   await go('#/playbook');
-  check('playbook lists 20 recs', (await ev('document.querySelectorAll("#results .card").length')) === 20);
+  check('playbook lists 20 recs', (await ev('document.querySelectorAll("#results .rrow").length')) === 20);
+  check('playbook: score columns are fixed (every row lines up at the same x)', (await ev(`(()=>{const xs=[...document.querySelectorAll('#results .rrow')].flatMap(r=>['.r-horizon','.r-effort','.r-impact','.r-prio','.r-upd'].map(s=>Math.round(r.querySelector(s).getBoundingClientRect().left)));const per=5;const rows=xs.length/per;for(let k=0;k<per;k++){const col=[];for(let i=0;i<rows;i++)col.push(xs[i*per+k]);if(Math.max(...col)-Math.min(...col)>1)return false;}return true})()`)) === true);
+  check('main keeps its vertical padding (heading does not hug the header bar)', (await ev(`parseFloat(getComputedStyle(document.querySelector('main')).paddingTop)`)) >= 24);
   await ev(`(()=>{const c=document.getElementById('p-quick'); c.checked=true; c.dispatchEvent(new Event('input',{bubbles:true}));})()`); await sleep(100);
-  const q = await ev('[...document.querySelectorAll("#results .card")].map(c=>c.textContent)');
+  const q = await ev('[...document.querySelectorAll("#results .rrow")].map(c=>c.textContent)');
   check('quick wins only low effort + high/transformative', q.length > 0 && q.every((t) => /Effort: Low/.test(t) && /Impact: (High|Transformative)/.test(t)), q.length + ' shown');
   await ev('document.querySelector("#rec-form [data-action=clear-rec-filters]").click()'); await sleep(150);
   check('playbook clear: focus moves to first filter', (await ev('document.activeElement.id')) === 'p-sort');
 
   // --- watchlist view + export panel (Builder-flagged risk)
   await go('#/watchlist');
-  check('watchlist shows watched trend and its recommendations', (await ev('document.querySelectorAll(".grid .card").length')) >= 1 && (await ev('document.querySelectorAll(".rec-list .card").length')) >= 1);
+  check('watchlist shows watched trends and their recommendations as registers', (await ev('document.querySelectorAll("#app .trow").length')) >= 1 && (await ev('document.querySelectorAll("#app .rrow").length')) >= 1);
   await ev('document.querySelector("[data-action=export]").click()'); await sleep(150);
   check('export panel visible, textarea focused, has Markdown', (await ev('!document.getElementById("export-panel").hidden')) && (await ev('document.activeElement.id')) === 'export-text' && (await ev('document.getElementById("export-text").value')).startsWith('# IAM Trend Radar watchlist'));
   // unwatch from watchlist view: re-render must keep panel? record behaviour
@@ -169,24 +171,54 @@ async function main() {
   await send('Emulation.clearDeviceMetricsOverride');
 
 
-  // --- dashboard filter bar: always-open panel on desktop, collapsible on mobile, sticky bar, active count
-  await go('#/'); await sleep(150);
+  // --- dashboard: rail, sortable table and preview on desktop; filters collapse on mobile; tabs; Playbook bar sticks
+  await go('#/'); await sleep(350);
   check('desktop: Clear filters is not visible when nothing is filtered', (await ev(`getComputedStyle(document.getElementById('clear-filters')).display`)) === 'none');
   check('desktop: filter toggle hidden and panel visible', (await ev(`(()=>{const t=document.getElementById('filter-toggle'),p=document.getElementById('filter-panel');return getComputedStyle(t).display==='none'&&getComputedStyle(p).display!=='none'})()`)) === true);
+  check('desktop: each row shows status ladder, impact, momentum, reviewed date and source count (under the trend)', (await ev(`[...document.querySelectorAll('#results .trow')].every(r=>r.querySelector('.ladder')&&r.querySelector('.c-impact .bars')&&r.querySelector('.c-mom .ico')&&r.querySelector('time')&&/[0-9]+ sources?/.test(r.querySelector('.c-src').textContent))`)) === true);
+  const pvFirst = await ev(`document.querySelector('#preview .pv-title').textContent`);
+  check('desktop: preview opens on the first row', pvFirst === (await ev(`document.querySelector('#results .trow .c-trend a').textContent`)), pvFirst);
+  await ev(`document.querySelectorAll('#results .trow')[1].querySelector('.c-impact').click()`); await sleep(100);
+  check('desktop: clicking a row moves the selection and the preview follows', (await ev(`document.querySelectorAll('#results .trow[data-selected]').length`)) === 1 && (await ev(`document.querySelector('#preview .pv-title').textContent`)) === (await ev(`document.querySelectorAll('#results .trow')[1].querySelector('.c-trend a').textContent`)));
+  await ev(`document.querySelector('.th-sort[data-sort=title]').click()`); await sleep(300);
+  const titles = await ev(`[...document.querySelectorAll('#results .trow .c-trend a')].map(a=>a.textContent)`);
+  check('desktop: sorting by Trend sets aria-sort and orders A-Z', (await ev(`document.querySelector('.h-title').getAttribute('aria-sort')`)) === 'ascending' && JSON.stringify(titles) === JSON.stringify([...titles].sort((x, y) => x.localeCompare(y))));
+  check('desktop: focus stays on the sort header after re-render', (await ev(`document.activeElement.dataset.sort`)) === 'title');
+  await ev(`document.querySelector('.th-sort[data-sort=impact]').click()`); await sleep(100);
+  await ev(`document.getElementById('tab-landscape').click()`); await sleep(150);
+  check('desktop: Landscape tab swaps the table for the matrix', (await ev(`!!document.querySelector('#results table.matrix') && !document.querySelector('#results .ttable') && document.getElementById('tab-landscape').getAttribute('aria-selected')==='true'`)) === true);
+  check('desktop: the landscape has room (preview steps aside, cells wide enough to read)', (await ev(`(()=>{const c=document.querySelector('#results .matrix td:not(.corner)');return getComputedStyle(document.getElementById('preview')).display==='none'&&c.getBoundingClientRect().width>=140})()`)) === true);
+  await ev(`document.querySelector('[role=tablist]').dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true}))`); await sleep(150);
+  check('desktop: arrow keys move between tabs and back to the table', (await ev(`!!document.querySelector('#results .ttable') && document.getElementById('tab-table').getAttribute('aria-selected')==='true' && document.activeElement.id==='tab-table'`)) === true);
+  await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+  await go('#/'); await sleep(350);
+  check('1440: at least 7 trend rows fit in the first viewport', (await ev(`[...document.querySelectorAll('#results .trow')].filter(r=>r.getBoundingClientRect().bottom<=window.innerHeight).length`)) >= 7);
+  check('1440: preview shows and the table fits its column without running under it', (await ev(`(()=>{const t=document.querySelector('#results .ttable').getBoundingClientRect(),p=document.getElementById('preview').getBoundingClientRect();return getComputedStyle(document.getElementById('preview')).display!=='none'&&t.right<=p.left+1})()`)) === true);
+  await send('Emulation.setDeviceMetricsOverride', { width: 1024, height: 800, deviceScaleFactor: 1, mobile: false });
+  await go('#/'); await sleep(350);
+  check('1024: rows stack (no table header) and nothing overflows horizontally', (await ev(`getComputedStyle(document.querySelector('#results .ttable thead')).display==='none' && document.documentElement.scrollWidth <= document.documentElement.clientWidth`)) === true);
+  await send('Emulation.clearDeviceMetricsOverride');
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 800, deviceScaleFactor: 1, mobile: true });
   await go('#/'); await sleep(200);
   check('mobile: panel collapsed behind a visible toggle (aria-expanded=false)', (await ev(`(()=>{const t=document.getElementById('filter-toggle'),p=document.getElementById('filter-panel');return getComputedStyle(t).display!=='none'&&getComputedStyle(p).display==='none'&&t.getAttribute('aria-expanded')==='false'})()`)) === true);
+  check('mobile: the five nav links stay on one row (header does not eat the first viewport)', (await ev(`(()=>{const links=[...document.querySelectorAll('.nav a')];const tops=new Set(links.map(a=>Math.round(a.getBoundingClientRect().top)));return links.length===5&&tops.size===1&&document.querySelector('.site-header').getBoundingClientRect().height<=110&&document.documentElement.scrollWidth<=document.documentElement.clientWidth})()`)) === true);
+  check('mobile: search stays visible while the panel is collapsed', (await ev(`getComputedStyle(document.getElementById('f-text')).display!=='none'`)) === true);
   await ev(`document.getElementById('filter-toggle').click()`); await sleep(100);
   check('mobile: toggle opens the panel (aria-expanded=true)', (await ev(`(()=>{const t=document.getElementById('filter-toggle'),p=document.getElementById('filter-panel');return getComputedStyle(p).display!=='none'&&t.getAttribute('aria-expanded')==='true'})()`)) === true);
   await ev(`document.querySelector('input[name=impact][value=high]').click()`); await sleep(100);
   check('toggle label shows active filter count', (await ev(`document.getElementById('filter-toggle').textContent.trim()`)) === 'Filters (1)');
-  check('chips filter the landscape too', (await ev(`document.querySelectorAll('#landscape-body .dot').length`)) === (await ev(`document.querySelectorAll('#results .card').length`)));
+  const nRows = await ev(`document.querySelectorAll('#results .trow').length`);
+  check('mobile: rows stack with the trend title on its own line', nRows > 0 && (await ev(`(()=>{const r=document.querySelector('#results .trow');return r.querySelector('.c-trend').getBoundingClientRect().width > r.getBoundingClientRect().width*0.8})()`)) === true);
+  await ev(`document.getElementById('tab-landscape').click()`); await sleep(150);
+  check('filters apply to the landscape too', (await ev(`document.querySelectorAll('#results .dot').length`)) === nRows);
+  await ev(`document.getElementById('tab-table').click()`); await sleep(100);
   check('Clear filters button appears when a filter is active', (await ev(`getComputedStyle(document.getElementById('clear-filters')).display`)) !== 'none');
-  await ev(`window.scrollTo(0, 1200)`); await sleep(200);
-  const barTop = await ev(`document.querySelector('.filter-bar').getBoundingClientRect().top`);
-  check('filter bar stays stuck to the top while scrolling', Math.abs(barTop) < 2, 'top=' + barTop);
   await ev(`document.getElementById('clear-filters').click()`); await sleep(200);
   check('clear: count label and button reset', (await ev(`document.getElementById('filter-toggle').textContent.trim()`)) === 'Filters' && (await ev(`getComputedStyle(document.getElementById('clear-filters')).display`)) === 'none');
+  await go('#/playbook'); await sleep(200);
+  await ev(`window.scrollTo(0, 1200)`); await sleep(200);
+  const barTop = await ev(`document.querySelector('.filter-bar').getBoundingClientRect().top`);
+  check('Playbook filter bar stays stuck to the top while scrolling', Math.abs(barTop) < 2, 'top=' + barTop);
   await send('Emulation.clearDeviceMetricsOverride');
 
   // --- Latest page: file:// explains itself; http(s) shows grouped items, source chips, and "new since your last visit"

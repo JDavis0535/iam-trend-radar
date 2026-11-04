@@ -45,17 +45,21 @@ function itemHtml(i) {
   const url = safeUrl(i.link);
   const title = url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(i.title)}<span class="vh"> (opens in a new tab)</span></a>` : esc(i.title);
   const isNew = isNewItem(i, baseline || 0);
-  const when = i.published ? `<time datetime="${esc(i.published)}">${esc(fmtDate(i.published))}</time>` : '';
-  return `<li class="card feed-item">
-  <h3 class="card-title">${title}</h3>
-  <p class="small muted feed-meta">${isNew ? '<span class="badge badge-new">New</span> ' : ''}${esc(i.source)}${when ? ` &middot; ${when}` : ''}</p>
-  ${i.summary ? `<p class="feed-summary">${esc(i.summary)}</p>` : ''}
-</li>`;
+  const when = i.published ? `<time datetime="${esc(i.published)}">${esc(fmtDate(i.published))}</time>` : '<span class="muted">Undated</span>';
+  return `<tr class="frow feed-item">
+  <td class="f-date">${when}</td>
+  <td class="f-src">${esc(i.source)}</td>
+  <td class="f-main"><span class="f-title">${title}</span>${isNew ? ' <span class="badge badge-new">New</span>' : ''}${i.summary ? `<span class="feed-summary">${esc(i.summary)}</span>` : ''}</td>
+</tr>`;
+}
+
+function feedTable(rows, label) {
+  return `<table class="ttable ftable"><caption class="vh">${esc(label)}</caption><thead class="vh"><tr><th scope="col">Date</th><th scope="col">Source</th><th scope="col">Headline</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function skeletonHtml() {
-  const card = '<li class="card skel" aria-hidden="true"><span class="skel-line skel-title"></span><span class="skel-line skel-meta"></span><span class="skel-line"></span><span class="skel-line skel-short"></span></li>';
-  return `<ul class="grid">${card.repeat(6)}</ul>`;
+  const row = '<tr class="frow skel" aria-hidden="true"><td class="f-date"><span class="skel-line skel-meta"></span></td><td class="f-src"><span class="skel-line skel-meta"></span></td><td class="f-main"><span class="skel-line skel-title"></span><span class="skel-line"></span></td></tr>';
+  return feedTable(row.repeat(6), 'Loading the latest items');
 }
 
 function bodyHtml() {
@@ -71,7 +75,7 @@ function bodyHtml() {
   if (!items.length) return `${staleNote}${failNote}${emptyState('No items for this source yet.')}`;
   const groups = groupFeedItems(items).map((g) => `<section class="feed-group" aria-labelledby="g-${esc(g.key)}">
   <h2 id="g-${esc(g.key)}" class="group-title">${esc(g.label)} <span class="muted small">(${g.items.length})</span></h2>
-  <ul class="grid">${g.items.map(itemHtml).join('')}</ul>
+  ${feedTable(g.items.map(itemHtml).join(''), g.label)}
 </section>`).join('');
   return `${staleNote}${failNote}${groups}`;
 }

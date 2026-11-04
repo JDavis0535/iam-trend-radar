@@ -92,4 +92,4 @@ No license has been chosen yet.
 
 ## Fonts
 
-The site uses Hanken Grotesk (variable, Latin subset), self-hosted in `css/fonts/` under the SIL Open Font License; the license text is `css/fonts/HankenGrotesk-OFL.txt`. No fonts are loaded from third parties.
+The site uses Source Sans 3 (variable, Latin subset), self-hosted in `css/fonts/` under the SIL Open Font License; the license text is `css/fonts/SourceSans3-OFL.txt`. No fonts are loaded from third parties.

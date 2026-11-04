@@ -22,13 +22,8 @@ export function labelOf(list, id) {
 
 // Icons are drawn as inline SVG on one 16px grid with a 1.75 stroke, not as Unicode glyphs, which change shape from
 // font to font. The paths are static strings and nothing from the data ever reaches them. Names double as the
-// taxonomy ids for maturity, momentum and horizon, so a badge looks its icon up by id.
-const RING = '<circle cx="8" cy="8" r="6"/>';
+// taxonomy ids for momentum and horizon, so a badge looks its icon up by id. Maturity is drawn as a status ladder.
 const ICON_PATHS = {
-  emerging: `${RING}<path d="M8 8V3A5 5 0 0 1 13 8z" fill="currentColor" stroke="none"/>`,
-  growing: `${RING}<path d="M8 8V3A5 5 0 0 1 8 13z" fill="currentColor" stroke="none"/>`,
-  mainstream: `${RING}<path d="M8 8V3A5 5 0 1 1 3 8z" fill="currentColor" stroke="none"/>`,
-  established: `${RING}<circle cx="8" cy="8" r="3.6" fill="currentColor" stroke="none"/>`,
   rising: '<path d="M4.5 11.5l7-7M5.5 4.5h6v6"/>',
   steady: '<path d="M3 8h9.5M9 4.5L12.5 8 9 11.5"/>',
   cooling: '<path d="M4.5 4.5l7 7M5.5 11.5h6v-6"/>',
@@ -37,7 +32,8 @@ const ICON_PATHS = {
   later: '<circle cx="3" cy="8" r="1.15"/><circle cx="8" cy="8" r="1.15"/><circle cx="13" cy="8" r="1.15" fill="currentColor"/>',
   star: '<path d="M8 1.9l1.85 3.9 4.25.55-3.1 2.95.8 4.25L8 11.45 4.2 13.55l.8-4.25-3.1-2.95 4.25-.55z"/>',
   warn: '<path d="M8 2.2l6.2 11H1.8z"/><path d="M8 6.4v3.2M8 11.6v.1"/>',
-  back: '<path d="M10 3.5L5.5 8l4.5 4.5"/>'
+  back: '<path d="M10 3.5L5.5 8l4.5 4.5"/>',
+  sort: '<path d="M4.5 6.5L8 10l3.5-3.5"/>'
 };
 
 /** Inline SVG icon by name; '' for an unknown name. Always decorative (aria-hidden). */
@@ -56,17 +52,26 @@ function meter(kind, id) {
   return `<span class="bars" aria-hidden="true">${Array.from({ length: m.total }, (_, i) => `<i${i < n ? ' class="on"' : ''}></i>`).join('')}</span>`;
 }
 
-const KIND_LABELS = { maturity: 'Maturity', impact: 'Impact', momentum: 'Momentum', horizon: 'Horizon', effort: 'Effort' };
-
-/** Badge with a drawn icon or meter, a visible text label and a screen-reader prefix. Never color-only. */
-export function badge(kind, id, taxonomy) {
-  const text = labelOf(taxonomy && taxonomy[kind], id);
-  const glyph = METER[kind] ? meter(kind, id) : icon(id);
-  return `<span class="badge badge-${esc(kind)} badge-v-${esc(id)}"><span aria-hidden="true">${glyph}</span> <span class="vh">${esc(KIND_LABELS[kind] || kind)}: </span>${esc(text)}</span>`;
+/**
+ * Four-step status ladder for maturity: the world's signature mark. The step is the position of the id in
+ * taxonomy.maturity (1 = least mature); unknown ids draw an empty ladder. Decorative: callers add the text.
+ */
+export function ladder(id, taxonomy) {
+  const list = (taxonomy && taxonomy.maturity) || [];
+  const step = list.findIndex((x) => x.id === id) + 1;
+  return `<span class="ladder" data-step="${step}" aria-hidden="true">${Array.from({ length: list.length || 4 }, (_, i) => `<i${i < step ? ' class="on"' : ''}></i>`).join('')}</span>`;
 }
+
+const KIND_LABELS = { maturity: 'Maturity', impact: 'Impact', momentum: 'Momentum', horizon: 'Horizon', effort: 'Effort' };
 
 export function categoryChips(item, taxonomy) {
   return (item.categories || []).map((c) => `<span class="chip">${esc(labelOf(taxonomy.categories, c))}</span>`).join(' ');
+}
+
+/** Mark (ladder, meter or icon) followed by the visible label, with a screen-reader prefix. For tables and spec blocks. */
+export function valueMark(kind, id, taxonomy) {
+  const mark = kind === 'maturity' ? ladder(id, taxonomy) : METER[kind] ? meter(kind, id) : icon(id);
+  return `<span class="mark" aria-hidden="true">${mark}</span><span class="vh">${esc(KIND_LABELS[kind] || kind)}: </span>${esc(labelOf(taxonomy && taxonomy[kind], id))}`;
 }
 
 export function verificationBadge(item) {
@@ -78,24 +83,44 @@ export function watchButton(id, watched, title) {
   return `<button type="button" class="btn btn-watch" data-watch="${esc(id)}" aria-pressed="${watched ? 'true' : 'false'}" aria-label="Watch ${esc(title)}">${icon('star')}<span>${watched ? 'Watching' : 'Watch'}</span></button>`;
 }
 
-export function dateLine(item, stale) {
-  return `<span class="muted">Updated <time datetime="${esc(item.lastUpdated)}">${esc(item.lastUpdated)}</time></span>${stale ? ' <span class="badge badge-warn">May be stale</span>' : ''}`;
+/** One register row for a trend (dashboard and watchlist). ctx: { taxonomy, isWatched(id), isStale(date) }. */
+export function trendRow(t, ctx, selected) {
+  const tx = ctx.taxonomy;
+  const flag = t.needsVerification ? ` <span class="flag">${icon('warn')} Needs verification</span>` : '';
+  const cats = (t.categories || []).map((c) => labelOf(tx.categories, c)).join(', ');
+  const n = (t.sources || []).length;
+  return `<tr class="trow" data-trend="${esc(t.id)}"${selected ? ' data-selected="true"' : ''}>
+  <td class="c-status"><span class="mark" aria-hidden="true">${ladder(t.maturity, tx)}</span><span class="vh">Maturity: </span><span class="c-label">${esc(labelOf(tx.maturity, t.maturity))}</span></td>
+  <td class="c-trend"><a href="#/trend/${encodeURIComponent(t.id)}">${esc(t.title)}</a>${flag}<span class="c-cat">${esc(cats)}<span class="c-src"> &middot; ${n} source${n === 1 ? '' : 's'}</span></span></td>
+  <td class="c-impact">${valueMark('impact', t.impact, tx)}</td>
+  <td class="c-mom">${valueMark('momentum', t.momentum, tx)}</td>
+  <td class="c-rev"><time datetime="${esc(t.lastUpdated)}">${esc(t.lastUpdated)}</time>${ctx.isStale(t.lastUpdated) ? ' <span class="badge badge-warn">May be stale</span>' : ''}</td>
+  <td class="c-act">${watchButton(t.id, ctx.isWatched(t.id), t.title)}</td>
+</tr>`;
 }
 
-/** ctx: { taxonomy, isWatched(id), isStale(date) } */
-export function trendCard(t, ctx) {
-  const watched = ctx.isWatched(t.id);
-  return `<li class="card">
-  <h3 class="card-title"><a href="#/trend/${encodeURIComponent(t.id)}">${esc(t.title)}</a></h3>
-  <p class="chips">${categoryChips(t, ctx.taxonomy)}</p>
-  <p class="badges">${badge('maturity', t.maturity, ctx.taxonomy)} ${badge('impact', t.impact, ctx.taxonomy)} ${badge('momentum', t.momentum, ctx.taxonomy)} ${verificationBadge(t)}</p>
-  <p>${esc(t.summary)}</p>
-  <div class="card-foot"><p class="small">${dateLine(t, ctx.isStale(t.lastUpdated))}</p>${watchButton(t.id, watched, t.title)}</div>
-</li>`;
+/**
+ * The trend register: fixed columns, one row per trend. With sortable on, the Status, Trend, Impact and Reviewed
+ * headers are buttons carrying data-sort and aria-sort for the active column (title sorts A-Z, the rest high first).
+ */
+export function trendTable(list, ctx, { selectedId = null, sortable = false, sort = '' } = {}) {
+  const col = (id, label) => {
+    if (!sortable) return `<th scope="col" class="h-${id}">${label}</th>`;
+    const active = sort === id;
+    return `<th scope="col" class="h-${id}" aria-sort="${active ? (id === 'title' ? 'ascending' : 'descending') : 'none'}"><button type="button" class="th-sort" data-sort="${id}">${label}${active ? icon('sort') : ''}</button></th>`;
+  };
+  const head = [col('maturity', 'Status'), col('title', 'Trend'), col('impact', 'Impact'), '<th scope="col" class="h-momentum">Momentum</th>', col('updated', 'Reviewed'), '<th scope="col" class="h-act"><span class="vh">Watch</span></th>'];
+  return `<table class="ttable"><caption class="vh">Trends</caption><thead><tr>${head.join('')}</tr></thead><tbody>${list.map((t) => trendRow(t, ctx, t.id === selectedId)).join('')}</tbody></table>`;
 }
 
-/** Recommendation card. ctx adds: trendById(id), score(rec), recById(id) */
-export function recCard(r, ctx) {
+/** Priority score (impact rank x 2 minus effort rank, so -1 to 7) as a 0-100 bar width. Always a finite number. */
+export function priorityPct(score) {
+  const n = Number(score);
+  return Number.isFinite(n) ? Math.round(Math.max(0, Math.min(1, (n + 1) / 8)) * 100) : 0;
+}
+
+/** One register row for a recommendation. ctx adds: trendById(id), score(rec), recById(id) */
+export function recRow(r, ctx) {
   const tx = ctx.taxonomy;
   const links = (r.trendIds || []).map((id) => {
     const t = ctx.trendById(id);
@@ -106,19 +131,29 @@ export function recCard(r, ctx) {
     return `<li>${dep ? esc(dep.title) : esc(d)}</li>`;
   }).join('');
   const list = (arr) => (arr || []).map((s) => `<li>${esc(s)}</li>`).join('');
-  return `<li class="card rec">
-  <h3 class="card-title">${esc(r.title)}</h3>
-  <p class="badges">${badge('horizon', r.horizon, tx)} ${badge('effort', r.effort, tx)} ${badge('impact', r.impact, tx)} <span class="badge"><span class="vh">Priority score: </span>Priority ${ctx.score(r)}</span></p>
-  <p>${esc(r.description)}</p>
-  <p class="small">Trends: ${links}</p>
-  <details><summary>Steps, metrics and dependencies</summary>
-    <h4>Steps</h4><ol>${list(r.steps)}</ol>
-    <h4>Success metrics</h4><ul>${list(r.successMetrics)}</ul>
-    ${deps ? `<h4>Dependencies</h4><ul>${deps}</ul>` : ''}
-    <p class="small">Audience: ${esc((r.audience || []).join(', '))}</p>
-  </details>
-  <p class="small">${dateLine(r, ctx.isStale(r.lastUpdated))}</p>
-</li>`;
+  const score = ctx.score(r);
+  return `<tr class="rrow">
+  <td class="r-main"><h3 class="r-title">${esc(r.title)}</h3>
+    <p>${esc(r.description)}</p>
+    <p class="small muted">Trends: ${links}</p>
+    <details><summary>Steps, metrics and dependencies</summary>
+      <h4>Steps</h4><ol>${list(r.steps)}</ol>
+      <h4>Success metrics</h4><ul>${list(r.successMetrics)}</ul>
+      ${deps ? `<h4>Dependencies</h4><ul>${deps}</ul>` : ''}
+      <p class="small">Audience: ${esc((r.audience || []).join(', '))}</p>
+    </details></td>
+  <td class="r-horizon">${valueMark('horizon', r.horizon, tx)}</td>
+  <td class="r-effort">${valueMark('effort', r.effort, tx)}</td>
+  <td class="r-impact">${valueMark('impact', r.impact, tx)}</td>
+  <td class="r-prio"><span class="pbar" aria-hidden="true"><i style="width:${priorityPct(score)}%"></i></span><span class="vh">Priority score: </span>${esc(score)}</td>
+  <td class="r-upd"><time datetime="${esc(r.lastUpdated)}">${esc(r.lastUpdated)}</time>${ctx.isStale(r.lastUpdated) ? ' <span class="badge badge-warn">May be stale</span>' : ''}</td>
+</tr>`;
+}
+
+/** The recommendation register: fixed columns, one row per recommendation. */
+export function recTable(list, ctx, label = 'Recommendations') {
+  const head = ['Recommendation', 'Horizon', 'Effort', 'Impact', 'Priority', 'Updated'];
+  return `<table class="ttable rtable"><caption class="vh">${esc(label)}</caption><thead><tr>${head.map((h, i) => `<th scope="col" class="${i ? 'h-' + h.toLowerCase() : 'h-rec'}">${h}</th>`).join('')}</tr></thead><tbody>${list.map((r) => recRow(r, ctx)).join('')}</tbody></table>`;
 }
 
 /** <option> list with a leading "all" option (omitted when allLabel is null). items: [{id,label}] */
@@ -145,7 +180,7 @@ export function landscape(trends, tx) {
     const any = cells.some((c) => c.ts.length);
     return `<tr class="imp-${esc(imp.id)}${any ? '' : ' row-empty'}"><th scope="row">${esc(imp.label)}</th>${cells.map((c) => `<td data-label="${esc(c.mat.label)}"${c.ts.length ? '' : ' class="empty-cell"'}>${c.ts.map(dot).join('')}</td>`).join('')}</tr>`;
   }).join('');
-  return `<table class="matrix"><caption class="vh">Trends by maturity (columns) and impact (rows)</caption><thead><tr><td class="corner"></td>${cols.map((c) => `<th scope="col">${esc(c.label)}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>`;
+  return `<table class="matrix"><caption class="vh">Trends by maturity (columns) and impact (rows)</caption><thead><tr><td class="corner"></td>${cols.map((c) => `<th scope="col">${ladder(c.id, tx)} ${esc(c.label)}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>`;
 }
 
 /** Radio group drawn as chips: a fieldset with a legend, an "all" option (value "") and one option per item. */

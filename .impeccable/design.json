@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-04T00:00:00Z",
+  "title": "Design System: IAM Trend Radar",
+  "extensions": {
+    "colorMeta": {
+      "ink": { "role": "primary", "displayName": "Ink Navy", "canonical": "#14202e", "tonalRamp": ["#0b121b", "#14202e", "#2a394a", "#4c5b6b", "#6b7686", "#98a3b0", "#d5dde6", "#eef2f6"] },
+      "shell-ink": { "role": "primary", "displayName": "Shell Ink", "canonical": "#14202e", "tonalRamp": ["#0a1118", "#14202e", "#243346", "#3b4c60", "#6b7686", "#b9c4d0", "#d5dde6", "#f7f9fb"] },
+      "status-3": { "role": "secondary", "displayName": "Maturity Teal", "canonical": "#14776f", "tonalRamp": ["#0b5f58", "#14776f", "#2f9b90", "#5fb3aa", "#8fcac4", "#b5dcd8", "#cfd8e1", "#e6f2f1"] },
+      "amber-flag": { "role": "tertiary", "displayName": "Unconfirmed Amber", "canonical": "#8f4506", "tonalRamp": ["#5a3300", "#8f4506", "#b45309", "#c9732a", "#dd9a5c", "#ebc08f", "#fff3d6", "#fffaf0"] },
+      "paper": { "role": "neutral", "displayName": "Cool Paper", "canonical": "#f7f9fb", "tonalRamp": ["#14202e", "#4c5b6b", "#6b7686", "#a9b4c0", "#d5dde6", "#eef2f6", "#f7f9fb", "#ffffff"] },
+      "hairline": { "role": "neutral", "displayName": "Hairline", "canonical": "#d5dde6", "tonalRamp": ["#4c5b6b", "#6b7686", "#8a95a3", "#a9b4c0", "#c0cad5", "#d5dde6", "#e4eaf0", "#eef2f6"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Page Title", "purpose": "The single h1 per view." },
+      "headline": { "displayName": "Section Title", "purpose": "h2 section headings." },
+      "title": { "displayName": "Record Title", "purpose": "h3, recommendation and preview titles." },
+      "body": { "displayName": "Body", "purpose": "Running text at 1.0625rem; measure 70ch." },
+      "label": { "displayName": "Data Label", "purpose": "Uppercase tracked labels attached to data: column heads, field labels, definition terms." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "ease-out-expo", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Route entrance only: 0.34s fade and 6px rise." },
+      { "name": "skeleton-shimmer", "value": "1.4s linear infinite", "purpose": "Loading lines in the feed register." }
+    ],
+    "breakpoints": [
+      { "name": "preview-drops", "value": "87.99rem (max)" },
+      { "name": "tables-stack", "value": "64rem (max)" },
+      { "name": "rail-collapses", "value": "52rem (max)" },
+      { "name": "nav-scrolls-matrix-stacks", "value": "48rem (max)" },
+      { "name": "scale-single-column", "value": "30rem (max)" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ink-filled action; one per region.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Export Markdown</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; min-height: 44px; padding: .5rem 1rem; font: inherit; font-weight: 600; cursor: pointer; color: var(--text, #14202e); background: var(--surface, #fff); border: 1px solid var(--control-border, #6b7686); border-radius: 4px; } .ds-btn:hover { background: var(--surface-2, #eef2f6); } .ds-btn-primary { background: var(--action, #14202e); color: var(--action-text, #fff); border-color: var(--action, #14202e); } .ds-btn-primary:hover { background: var(--action, #14202e); filter: brightness(1.15); } .ds-btn:focus-visible { outline: 3px solid var(--focus, #0b5cad); outline-offset: 2px; }"
+    },
+    {
+      "name": "Default Button",
+      "kind": "button",
+      "refersTo": "button-default",
+      "description": "Secondary action: white fill, control-edge border.",
+      "html": "<button class=\"ds-btn\">Watch</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: .5rem 1rem; font: inherit; font-weight: 600; cursor: pointer; color: var(--text, #14202e); background: var(--surface, #fff); border: 1px solid var(--control-border, #6b7686); border-radius: 4px; } .ds-btn:hover { background: var(--surface-2, #eef2f6); } .ds-btn:focus-visible { outline: 3px solid var(--focus, #0b5cad); outline-offset: 2px; }"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "Square 44px field with a control-edge border.",
+      "html": "<input class=\"ds-input\" type=\"search\" placeholder=\"Search trends\">",
+      "css": ".ds-input { width: 100%; min-height: 44px; padding: .5rem .7rem; font: inherit; color: var(--text, #14202e); background: var(--surface, #fff); border: 1px solid var(--control-border, #6b7686); border-radius: 4px; } .ds-input::placeholder { color: var(--muted, #4c5b6b); opacity: 1; } .ds-input:focus-visible { outline: 3px solid var(--focus, #0b5cad); outline-offset: 2px; }"
+    },
+    {
+      "name": "Site Navigation",
+      "kind": "nav",
+      "refersTo": "site-header",
+      "description": "Ink shell bar with flat links and a 3px underline on the current page.",
+      "html": "<header class=\"ds-header\"><span class=\"ds-brand\">IAM Trend Radar</span><nav class=\"ds-nav\"><a href=\"#\" aria-current=\"page\">Dashboard</a><a href=\"#\">Playbook</a><a href=\"#\">Latest</a></nav></header>",
+      "css": ".ds-header { display: flex; align-items: center; justify-content: space-between; gap: 2rem; padding: 0 1rem; min-height: 56px; background: var(--shell, #14202e); color: var(--shell-text, #fff); } .ds-brand { font-weight: 700; font-size: 1.1875rem; letter-spacing: -.01em; } .ds-nav { display: flex; gap: .25rem; } .ds-nav a { padding: 0 .75rem; line-height: 56px; color: var(--shell-muted, #b9c4d0); font-weight: 600; text-decoration: none; border-bottom: 3px solid transparent; } .ds-nav a:hover { color: var(--shell-text, #fff); } .ds-nav a[aria-current=page] { color: var(--shell-text, #fff); border-bottom-color: var(--shell-text, #fff); }"
+    },
+    {
+      "name": "Chip Radio Group",
+      "kind": "chip",
+      "refersTo": "chip-option",
+      "description": "Square option tags; the selected one inverts to ink.",
+      "html": "<div class=\"ds-opts\"><span class=\"ds-opt\">Low</span><span class=\"ds-opt ds-opt-on\">High</span></div>",
+      "css": ".ds-opts { display: flex; gap: .3rem; flex-wrap: wrap; } .ds-opt { display: inline-flex; align-items: center; min-height: 2.25rem; padding: .3rem .75rem; font-size: .9375rem; font-weight: 550; cursor: pointer; background: var(--surface, #fff); color: var(--text, #14202e); border: 1px solid var(--control-border, #6b7686); border-radius: 4px; } .ds-opt:hover { background: var(--surface-2, #eef2f6); } .ds-opt-on { background: var(--action, #14202e); border-color: var(--action, #14202e); color: var(--action-text, #fff); font-weight: 650; }"
+    },
+    {
+      "name": "Status Ladder",
+      "kind": "custom",
+      "refersTo": "status-3",
+      "description": "Four-step teal maturity indicator; steps fill up to the trend's maturity. Teal only ever means this.",
+      "html": "<span class=\"ds-ladder\" data-step=\"3\"><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i></i></span>",
+      "css": ".ds-ladder { display: inline-flex; gap: 2px; vertical-align: middle; } .ds-ladder i { display: block; width: 13px; height: 9px; background: var(--st0, #cfd8e1); border-radius: 1px; } .ds-ladder[data-step=\"3\"] i.on { background: var(--st3, #14776f); }"
+    },
+    {
+      "name": "Trend Table Row",
+      "kind": "custom",
+      "refersTo": "register-table",
+      "description": "Register in place of cards: sunk label header, hairline rows, trend link left, fixed score columns right.",
+      "html": "<table class=\"ds-table\"><thead><tr><th>Trend</th><th>Status</th><th>Impact</th></tr></thead><tbody><tr><td><a href=\"#\">Passkeys</a><span class=\"ds-cat\">Authentication</span></td><td>Established</td><td>High</td></tr></tbody></table>",
+      "css": ".ds-table { width: 100%; border-collapse: collapse; background: var(--surface, #fff); border: 1px solid var(--border, #d5dde6); border-radius: 6px; } .ds-table th { padding: .55rem .5rem; text-align: left; font-size: .8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted, #4c5b6b); background: var(--surface-2, #eef2f6); border-bottom: 1px solid var(--border, #d5dde6); } .ds-table td { padding: .7rem .5rem; border-top: 1px solid var(--border, #d5dde6); vertical-align: top; } .ds-table tbody tr:first-child td { border-top: 0; } .ds-table tbody tr:hover { background: color-mix(in srgb, var(--text, #14202e) 3%, var(--surface, #fff)); } .ds-table a { font-weight: 650; color: var(--text, #14202e); text-decoration: none; } .ds-table a:hover { text-decoration: underline; text-decoration-thickness: 2px; } .ds-cat { display: block; color: var(--muted, #4c5b6b); font-size: .9375rem; }"
+    },
+    {
+      "name": "Unconfirmed Badge",
+      "kind": "chip",
+      "refersTo": "badge-warn",
+      "description": "Amber tag for claims that need verification; text always present.",
+      "html": "<span class=\"ds-badge ds-badge-warn\">Needs verification</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: .4rem; padding: .1rem .55rem; font-size: .9063rem; line-height: 1.5; font-weight: 550; border-radius: 4px; border: 1px solid var(--border, #d5dde6); background: var(--surface-2, #eef2f6); color: var(--text, #14202e); white-space: nowrap; } .ds-badge-warn { background: var(--warn-bg, #fff3d6); color: var(--warn-text, #5a3300); border-color: var(--warn-border, #b45309); font-weight: 600; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Standards-Track Status",
+    "overview": "The site reads like the status page of a standards body: a cool paper ground, an ink-navy shell and ink type, hairline rules, and a register of rows where a card grid might have been. Every decision serves scanning. Maturity is the one thing the page colors, and it does so on a four-step teal ladder; everything else is ink, paper and gray-blue.\n\nDensity is moderate and tabular. Trends, recommendations and feed items are rows in tables with fixed score columns on the right and readable prose on the left. Controls are square (4px) and panels barely rounded (6px). Depth comes from hairline borders and tonal steps; nothing floats. Light and dark both ship and follow prefers-color-scheme.",
+    "keyCharacteristics": [
+      "Ink is the action color: primary buttons, selected chips, selected tabs, the current nav item.",
+      "Teal appears only as the four-step maturity ladder.",
+      "Amber appears only for unconfirmed claims.",
+      "Registers (tables) replace cards; mobile reflows rows into stacked bordered rows.",
+      "Flat: no box-shadow anywhere.",
+      "One authored motion moment: the route entrance."
+    ],
+    "rules": [
+      { "name": "The Teal-Means-Maturity Rule", "body": "Teal is never used for links, buttons, success, or decoration. If it is teal, it states a maturity step.", "section": "colors" },
+      { "name": "The Amber-Means-Unconfirmed Rule", "body": "Amber marks a claim that could not be verified. It is never used for generic warnings, highlights or emphasis.", "section": "colors" },
+      { "name": "The Ink-Is-Action Rule", "body": "Anything the visitor can act on resolves to ink fill or ink text, selected or primary; selection is shown by inversion, not by a new hue.", "section": "colors" },
+      { "name": "The One Family Rule", "body": "Source Sans 3 only. Do not add a display face or a second sans.", "section": "typography" },
+      { "name": "The Label-Over-Data Rule", "body": "Uppercase tracked labels appear only as column heads, field labels and definition terms attached to data, never as free-floating text above headings.", "section": "typography" },
+      { "name": "The No-Shadow Rule", "body": "Separate with a hairline or a tonal step. Selection and hover are fill changes (ink inversion, a 3 to 7 percent ink tint), never lift.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep teal for the maturity ladder and nothing else.",
+      "Do keep amber for unconfirmed claims and pair it with the words (\"Needs verification\").",
+      "Do use ink fill with inverse text for primary, selected and current states.",
+      "Do present repeated records as registers: wide content column left, fixed nowrap score columns right, hairline row rules.",
+      "Do use 4px radius for controls and 6px for panels and tables; use control-edge borders on anything interactive and hairline borders on anything that is only a container.",
+      "Do pair every mark (ladder, bars, icons) with text.",
+      "Do keep the 3px focus outline (blue in light, gold in dark and on the shell)."
+    ],
+    "donts": [
+      "Don't add box-shadows, gradients on surfaces, or glass; the only gradient is the skeleton shimmer.",
+      "Don't turn registers into card grids.",
+      "Don't introduce a second typeface or a new accent hue.",
+      "Don't use teal or amber as decoration, hover color or link color.",
+      "Don't rely on color alone to carry status or priority.",
+      "Don't animate anything beyond the route entrance and skeleton."
+    ]
+  }
+}

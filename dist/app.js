@@ -176,13 +176,8 @@ function labelOf(list, id) {
 
 // Icons are drawn as inline SVG on one 16px grid with a 1.75 stroke, not as Unicode glyphs, which change shape from
 // font to font. The paths are static strings and nothing from the data ever reaches them. Names double as the
-// taxonomy ids for maturity, momentum and horizon, so a badge looks its icon up by id.
-const RING = '<circle cx="8" cy="8" r="6"/>';
+// taxonomy ids for momentum and horizon, so a badge looks its icon up by id. Maturity is drawn as a status ladder.
 const ICON_PATHS = {
-  emerging: `${RING}<path d="M8 8V3A5 5 0 0 1 13 8z" fill="currentColor" stroke="none"/>`,
-  growing: `${RING}<path d="M8 8V3A5 5 0 0 1 8 13z" fill="currentColor" stroke="none"/>`,
-  mainstream: `${RING}<path d="M8 8V3A5 5 0 1 1 3 8z" fill="currentColor" stroke="none"/>`,
-  established: `${RING}<circle cx="8" cy="8" r="3.6" fill="currentColor" stroke="none"/>`,
   rising: '<path d="M4.5 11.5l7-7M5.5 4.5h6v6"/>',
   steady: '<path d="M3 8h9.5M9 4.5L12.5 8 9 11.5"/>',
   cooling: '<path d="M4.5 4.5l7 7M5.5 11.5h6v-6"/>',
@@ -191,7 +186,8 @@ const ICON_PATHS = {
   later: '<circle cx="3" cy="8" r="1.15"/><circle cx="8" cy="8" r="1.15"/><circle cx="13" cy="8" r="1.15" fill="currentColor"/>',
   star: '<path d="M8 1.9l1.85 3.9 4.25.55-3.1 2.95.8 4.25L8 11.45 4.2 13.55l.8-4.25-3.1-2.95 4.25-.55z"/>',
   warn: '<path d="M8 2.2l6.2 11H1.8z"/><path d="M8 6.4v3.2M8 11.6v.1"/>',
-  back: '<path d="M10 3.5L5.5 8l4.5 4.5"/>'
+  back: '<path d="M10 3.5L5.5 8l4.5 4.5"/>',
+  sort: '<path d="M4.5 6.5L8 10l3.5-3.5"/>'
 };
 
 /** Inline SVG icon by name; '' for an unknown name. Always decorative (aria-hidden). */
@@ -210,17 +206,26 @@ function meter(kind, id) {
   return `<span class="bars" aria-hidden="true">${Array.from({ length: m.total }, (_, i) => `<i${i < n ? ' class="on"' : ''}></i>`).join('')}</span>`;
 }
 
-const KIND_LABELS = { maturity: 'Maturity', impact: 'Impact', momentum: 'Momentum', horizon: 'Horizon', effort: 'Effort' };
-
-/** Badge with a drawn icon or meter, a visible text label and a screen-reader prefix. Never color-only. */
-function badge(kind, id, taxonomy) {
-  const text = labelOf(taxonomy && taxonomy[kind], id);
-  const glyph = METER[kind] ? meter(kind, id) : icon(id);
-  return `<span class="badge badge-${esc(kind)} badge-v-${esc(id)}"><span aria-hidden="true">${glyph}</span> <span class="vh">${esc(KIND_LABELS[kind] || kind)}: </span>${esc(text)}</span>`;
+/**
+ * Four-step status ladder for maturity: the world's signature mark. The step is the position of the id in
+ * taxonomy.maturity (1 = least mature); unknown ids draw an empty ladder. Decorative: callers add the text.
+ */
+function ladder(id, taxonomy) {
+  const list = (taxonomy && taxonomy.maturity) || [];
+  const step = list.findIndex((x) => x.id === id) + 1;
+  return `<span class="ladder" data-step="${step}" aria-hidden="true">${Array.from({ length: list.length || 4 }, (_, i) => `<i${i < step ? ' class="on"' : ''}></i>`).join('')}</span>`;
 }
+
+const KIND_LABELS = { maturity: 'Maturity', impact: 'Impact', momentum: 'Momentum', horizon: 'Horizon', effort: 'Effort' };
 
 function categoryChips(item, taxonomy) {
   return (item.categories || []).map((c) => `<span class="chip">${esc(labelOf(taxonomy.categories, c))}</span>`).join(' ');
+}
+
+/** Mark (ladder, meter or icon) followed by the visible label, with a screen-reader prefix. For tables and spec blocks. */
+function valueMark(kind, id, taxonomy) {
+  const mark = kind === 'maturity' ? ladder(id, taxonomy) : METER[kind] ? meter(kind, id) : icon(id);
+  return `<span class="mark" aria-hidden="true">${mark}</span><span class="vh">${esc(KIND_LABELS[kind] || kind)}: </span>${esc(labelOf(taxonomy && taxonomy[kind], id))}`;
 }
 
 function verificationBadge(item) {
@@ -232,24 +237,44 @@ function watchButton(id, watched, title) {
   return `<button type="button" class="btn btn-watch" data-watch="${esc(id)}" aria-pressed="${watched ? 'true' : 'false'}" aria-label="Watch ${esc(title)}">${icon('star')}<span>${watched ? 'Watching' : 'Watch'}</span></button>`;
 }
 
-function dateLine(item, stale) {
-  return `<span class="muted">Updated <time datetime="${esc(item.lastUpdated)}">${esc(item.lastUpdated)}</time></span>${stale ? ' <span class="badge badge-warn">May be stale</span>' : ''}`;
+/** One register row for a trend (dashboard and watchlist). ctx: { taxonomy, isWatched(id), isStale(date) }. */
+function trendRow(t, ctx, selected) {
+  const tx = ctx.taxonomy;
+  const flag = t.needsVerification ? ` <span class="flag">${icon('warn')} Needs verification</span>` : '';
+  const cats = (t.categories || []).map((c) => labelOf(tx.categories, c)).join(', ');
+  const n = (t.sources || []).length;
+  return `<tr class="trow" data-trend="${esc(t.id)}"${selected ? ' data-selected="true"' : ''}>
+  <td class="c-status"><span class="mark" aria-hidden="true">${ladder(t.maturity, tx)}</span><span class="vh">Maturity: </span><span class="c-label">${esc(labelOf(tx.maturity, t.maturity))}</span></td>
+  <td class="c-trend"><a href="#/trend/${encodeURIComponent(t.id)}">${esc(t.title)}</a>${flag}<span class="c-cat">${esc(cats)}<span class="c-src"> &middot; ${n} source${n === 1 ? '' : 's'}</span></span></td>
+  <td class="c-impact">${valueMark('impact', t.impact, tx)}</td>
+  <td class="c-mom">${valueMark('momentum', t.momentum, tx)}</td>
+  <td class="c-rev"><time datetime="${esc(t.lastUpdated)}">${esc(t.lastUpdated)}</time>${ctx.isStale(t.lastUpdated) ? ' <span class="badge badge-warn">May be stale</span>' : ''}</td>
+  <td class="c-act">${watchButton(t.id, ctx.isWatched(t.id), t.title)}</td>
+</tr>`;
 }
 
-/** ctx: { taxonomy, isWatched(id), isStale(date) } */
-function trendCard(t, ctx) {
-  const watched = ctx.isWatched(t.id);
-  return `<li class="card">
-  <h3 class="card-title"><a href="#/trend/${encodeURIComponent(t.id)}">${esc(t.title)}</a></h3>
-  <p class="chips">${categoryChips(t, ctx.taxonomy)}</p>
-  <p class="badges">${badge('maturity', t.maturity, ctx.taxonomy)} ${badge('impact', t.impact, ctx.taxonomy)} ${badge('momentum', t.momentum, ctx.taxonomy)} ${verificationBadge(t)}</p>
-  <p>${esc(t.summary)}</p>
-  <div class="card-foot"><p class="small">${dateLine(t, ctx.isStale(t.lastUpdated))}</p>${watchButton(t.id, watched, t.title)}</div>
-</li>`;
+/**
+ * The trend register: fixed columns, one row per trend. With sortable on, the Status, Trend, Impact and Reviewed
+ * headers are buttons carrying data-sort and aria-sort for the active column (title sorts A-Z, the rest high first).
+ */
+function trendTable(list, ctx, { selectedId = null, sortable = false, sort = '' } = {}) {
+  const col = (id, label) => {
+    if (!sortable) return `<th scope="col" class="h-${id}">${label}</th>`;
+    const active = sort === id;
+    return `<th scope="col" class="h-${id}" aria-sort="${active ? (id === 'title' ? 'ascending' : 'descending') : 'none'}"><button type="button" class="th-sort" data-sort="${id}">${label}${active ? icon('sort') : ''}</button></th>`;
+  };
+  const head = [col('maturity', 'Status'), col('title', 'Trend'), col('impact', 'Impact'), '<th scope="col" class="h-momentum">Momentum</th>', col('updated', 'Reviewed'), '<th scope="col" class="h-act"><span class="vh">Watch</span></th>'];
+  return `<table class="ttable"><caption class="vh">Trends</caption><thead><tr>${head.join('')}</tr></thead><tbody>${list.map((t) => trendRow(t, ctx, t.id === selectedId)).join('')}</tbody></table>`;
 }
 
-/** Recommendation card. ctx adds: trendById(id), score(rec), recById(id) */
-function recCard(r, ctx) {
+/** Priority score (impact rank x 2 minus effort rank, so -1 to 7) as a 0-100 bar width. Always a finite number. */
+function priorityPct(score) {
+  const n = Number(score);
+  return Number.isFinite(n) ? Math.round(Math.max(0, Math.min(1, (n + 1) / 8)) * 100) : 0;
+}
+
+/** One register row for a recommendation. ctx adds: trendById(id), score(rec), recById(id) */
+function recRow(r, ctx) {
   const tx = ctx.taxonomy;
   const links = (r.trendIds || []).map((id) => {
     const t = ctx.trendById(id);
@@ -260,19 +285,29 @@ function recCard(r, ctx) {
     return `<li>${dep ? esc(dep.title) : esc(d)}</li>`;
   }).join('');
   const list = (arr) => (arr || []).map((s) => `<li>${esc(s)}</li>`).join('');
-  return `<li class="card rec">
-  <h3 class="card-title">${esc(r.title)}</h3>
-  <p class="badges">${badge('horizon', r.horizon, tx)} ${badge('effort', r.effort, tx)} ${badge('impact', r.impact, tx)} <span class="badge"><span class="vh">Priority score: </span>Priority ${ctx.score(r)}</span></p>
-  <p>${esc(r.description)}</p>
-  <p class="small">Trends: ${links}</p>
-  <details><summary>Steps, metrics and dependencies</summary>
-    <h4>Steps</h4><ol>${list(r.steps)}</ol>
-    <h4>Success metrics</h4><ul>${list(r.successMetrics)}</ul>
-    ${deps ? `<h4>Dependencies</h4><ul>${deps}</ul>` : ''}
-    <p class="small">Audience: ${esc((r.audience || []).join(', '))}</p>
-  </details>
-  <p class="small">${dateLine(r, ctx.isStale(r.lastUpdated))}</p>
-</li>`;
+  const score = ctx.score(r);
+  return `<tr class="rrow">
+  <td class="r-main"><h3 class="r-title">${esc(r.title)}</h3>
+    <p>${esc(r.description)}</p>
+    <p class="small muted">Trends: ${links}</p>
+    <details><summary>Steps, metrics and dependencies</summary>
+      <h4>Steps</h4><ol>${list(r.steps)}</ol>
+      <h4>Success metrics</h4><ul>${list(r.successMetrics)}</ul>
+      ${deps ? `<h4>Dependencies</h4><ul>${deps}</ul>` : ''}
+      <p class="small">Audience: ${esc((r.audience || []).join(', '))}</p>
+    </details></td>
+  <td class="r-horizon">${valueMark('horizon', r.horizon, tx)}</td>
+  <td class="r-effort">${valueMark('effort', r.effort, tx)}</td>
+  <td class="r-impact">${valueMark('impact', r.impact, tx)}</td>
+  <td class="r-prio"><span class="pbar" aria-hidden="true"><i style="width:${priorityPct(score)}%"></i></span><span class="vh">Priority score: </span>${esc(score)}</td>
+  <td class="r-upd"><time datetime="${esc(r.lastUpdated)}">${esc(r.lastUpdated)}</time>${ctx.isStale(r.lastUpdated) ? ' <span class="badge badge-warn">May be stale</span>' : ''}</td>
+</tr>`;
+}
+
+/** The recommendation register: fixed columns, one row per recommendation. */
+function recTable(list, ctx, label = 'Recommendations') {
+  const head = ['Recommendation', 'Horizon', 'Effort', 'Impact', 'Priority', 'Updated'];
+  return `<table class="ttable rtable"><caption class="vh">${esc(label)}</caption><thead><tr>${head.map((h, i) => `<th scope="col" class="${i ? 'h-' + h.toLowerCase() : 'h-rec'}">${h}</th>`).join('')}</tr></thead><tbody>${list.map((r) => recRow(r, ctx)).join('')}</tbody></table>`;
 }
 
 /** <option> list with a leading "all" option (omitted when allLabel is null). items: [{id,label}] */
@@ -299,7 +334,7 @@ function landscape(trends, tx) {
     const any = cells.some((c) => c.ts.length);
     return `<tr class="imp-${esc(imp.id)}${any ? '' : ' row-empty'}"><th scope="row">${esc(imp.label)}</th>${cells.map((c) => `<td data-label="${esc(c.mat.label)}"${c.ts.length ? '' : ' class="empty-cell"'}>${c.ts.map(dot).join('')}</td>`).join('')}</tr>`;
   }).join('');
-  return `<table class="matrix"><caption class="vh">Trends by maturity (columns) and impact (rows)</caption><thead><tr><td class="corner"></td>${cols.map((c) => `<th scope="col">${esc(c.label)}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>`;
+  return `<table class="matrix"><caption class="vh">Trends by maturity (columns) and impact (rows)</caption><thead><tr><td class="corner"></td>${cols.map((c) => `<th scope="col">${ladder(c.id, tx)} ${esc(c.label)}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>`;
 }
 
 /** Radio group drawn as chips: a fieldset with a legend, an "all" option (value "") and one option per item. */
@@ -516,16 +551,18 @@ function makeCtx() {
 }
 
 /* ---- js/views/dashboard.js ---- */
-// views/dashboard.js - a summary line, the maturity x impact landscape and trend card grid, driven by combined filters, search, sort and a live result count.
-// Filters live in store.state.filters (persisted), so they survive navigation to a trend and back.
+// views/dashboard.js - filter rail, sortable trend table (or the maturity x impact landscape), and a spec-style
+// preview of the selected trend, all driven by one set of filters. Filters live in store.state.filters (persisted),
+// so they survive navigation to a trend and back. On narrow screens the rail's filters collapse behind a toggle.
 
 
 
 
 
-// Whether the filter panel is open on narrow screens (on wide screens it is always shown). Module-level so it
-// survives the re-render that follows a watch toggle or "Clear filters".
+// View state that should survive the re-render after a watch toggle or "Clear filters". Not persisted across visits.
 let panelOpen = false;
+let view = 'table';
+let selectedId = null;
 
 /** Number of active filters, and whether anything (including search text) can be cleared. */
 function filterSummary() {
@@ -533,71 +570,125 @@ function filterSummary() {
   return { n, any: n > 0 || state.filters.text.trim() !== '' };
 }
 
-function dashboardResults() {
-  const ctx = makeCtx();
+function results() {
   const list = sortTrends(filterTrends(state.trends, state.filters, state.watch), state.filters.sort);
-  const count = `${list.length} of ${state.trends.length} trends shown`;
-  const html = list.length
-    ? `<ul class="grid" aria-label="Trends">${list.map((t) => trendCard(t, ctx)).join('')}</ul>`
-    : emptyState('No trends match these filters.', '<p><button type="button" class="btn" data-action="clear-filters">Clear filters</button></p>');
-  return { count, html, list };
+  if (!list.some((t) => t.id === selectedId)) selectedId = list.length ? list[0].id : null;
+  return { list, count: `${list.length} of ${state.trends.length} trends shown` };
+}
+
+function panelHtml(list) {
+  if (!list.length) return emptyState('No trends match these filters.', '<p><button type="button" class="btn" data-action="clear-filters">Clear filters</button></p>');
+  return view === 'landscape' ? landscape(list, state.taxonomy) : trendTable(list, makeCtx(), { selectedId, sortable: true, sort: state.filters.sort });
+}
+
+/** Spec-style block for the selected trend (a definition list, like a document's status header). */
+function previewHtml() {
+  const t = state.trendMap.get(selectedId);
+  if (!t) return '<p class="muted">Select a trend to see its status.</p>';
+  const tx = state.taxonomy;
+  const recs = state.recommendations.filter((r) => r.trendIds.includes(t.id)).length;
+  const sources = (t.sources || []).map((s) => esc(s.publisher)).filter((v, i, a) => a.indexOf(v) === i).join(', ');
+  return `<h2 class="pv-title">${esc(t.title)}</h2>
+<p class="pv-ladder">${ladder(t.maturity, tx)}</p>
+<dl class="spec">
+  <dt>Status</dt><dd>${esc(labelOf(tx.maturity, t.maturity))}</dd>
+  <dt>Impact</dt><dd>${esc(labelOf(tx.impact, t.impact))}</dd>
+  <dt>Momentum</dt><dd>${esc(labelOf(tx.momentum, t.momentum))}</dd>
+  <dt>This review</dt><dd><time datetime="${esc(t.lastUpdated)}">${esc(t.lastUpdated)}</time></dd>
+  <dt>Recommendations</dt><dd>${recs} ranked</dd>
+  <dt>Sources</dt><dd>${sources || 'None listed'}</dd>
+</dl>
+${t.needsVerification ? `<p class="flag">${icon('warn')} Needs verification</p>` : ''}
+<p class="pv-sum">${esc(t.summary)}</p>
+<p><a class="btn btn-primary" href="#/trend/${encodeURIComponent(t.id)}">Open trend</a></p>`;
+}
+
+/** Status filter: radio rows that show the ladder step and how many trends sit at it. */
+function statusRadios(f) {
+  const tx = state.taxonomy;
+  const row = (value, label, count, mark) => `<label class="opt opt-row"><input type="radio" name="maturity" value="${esc(value)}"${value === (f.maturity || '') ? ' checked' : ''}><span>${mark}<b>${esc(label)}</b><em>${count}<span class="vh"> trends</span></em></span></label>`;
+  const rows = tx.maturity.map((m) => row(m.id, m.label, state.trends.filter((t) => t.maturity === m.id).length, ladder(m.id, tx)));
+  return `<fieldset class="chipset"><legend>Status</legend><div class="opts opts-col">${row('', 'All', state.trends.length, '')}${rows.join('')}</div></fieldset>`;
+}
+
+function categorySelect(f) {
+  const opts = state.taxonomy.categories.map((c) => `<option value="${esc(c.id)}"${c.id === f.category ? ' selected' : ''}>${esc(c.label)}</option>`).join('');
+  return `<div class="field"><label for="f-category">Category</label><select id="f-category" name="category"><option value=""${f.category ? '' : ' selected'}>All categories</option>${opts}</select></div>`;
 }
 
 function renderDashboard() {
   const f = state.filters;
   const tx = state.taxonomy;
-  const res = dashboardResults();
+  const res = results();
+  const sum = filterSummary();
   const flagged = state.trends.filter((t) => t.needsVerification).length;
   const rising = state.trends.filter((t) => t.momentum === 'rising').length;
-  const sum = filterSummary();
-  const sorts = [
-    { id: 'impact', label: 'Impact (high first)' },
-    { id: 'maturity', label: 'Maturity (most mature first)' },
-    { id: 'updated', label: 'Recently updated' },
-    { id: 'title', label: 'Title (A-Z)' }
-  ];
   return {
     title: 'Dashboard',
     html: `<h1 tabindex="-1">What is changing in identity and access</h1>
 <p class="lead">How mature and impactful each trend is, and what to do about it.</p>
 <p class="summary-line" aria-label="Dataset summary"><strong>${state.trends.length}</strong> trends, <strong>${state.recommendations.length}</strong> recommendations, <strong>${rising}</strong> with rising momentum${flagged ? `, <strong>${flagged}</strong> needing verification` : ''}. Data updated <time datetime="${esc(state.meta.lastUpdated)}">${esc(state.meta.lastUpdated)}</time>.</p>
-<form class="dash-filters${panelOpen ? ' open' : ''}" id="filter-form" role="search" aria-label="Filter trends" autocomplete="off">
-  <div class="filter-bar">
-    <div class="bar-search"><label for="f-text" class="vh">Search trends</label><input type="search" id="f-text" name="text" value="${esc(f.text)}" placeholder="Search title, summary, standard"></div>
-    <button type="button" class="btn btn-compact filter-toggle" id="filter-toggle" aria-expanded="${panelOpen}" aria-controls="filter-panel">Filters<span id="filter-count">${sum.n ? ` (${sum.n})` : ''}</span></button>
-    <div class="bar-sort"><label for="f-sort" class="vh">Sort by</label><select id="f-sort" name="sort">${options(sorts, f.sort, null)}</select></div>
-    <p id="result-count" class="result-count" role="status" aria-live="polite">${esc(res.count)}</p>
+<form class="dash${panelOpen ? ' open' : ''}" data-view="${view}" id="filter-form" role="search" aria-label="Filter trends" autocomplete="off">
+  <aside class="rail" aria-label="Filters">
+    <div class="rail-search">
+      <label for="f-text" class="vh">Search trends</label>
+      <input type="search" id="f-text" name="text" value="${esc(f.text)}" placeholder="Search trends">
+      <button type="button" class="btn btn-compact filter-toggle" id="filter-toggle" aria-expanded="${panelOpen}" aria-controls="filter-panel">Filters<span id="filter-count">${sum.n ? ` (${sum.n})` : ''}</span></button>
+    </div>
+    <div class="filter-panel" id="filter-panel">
+      ${statusRadios(f)}
+      ${chipRadios('impact', 'Impact', tx.impact, f.impact, 'All')}
+      ${chipRadios('momentum', 'Momentum', tx.momentum, f.momentum, 'All')}
+      ${categorySelect(f)}
+      <div class="panel-actions">${chipCheck('watchOnly', 'f-watch', 'Watchlist only', f.watchOnly, 'star')}<button type="button" class="btn btn-compact" id="clear-filters" data-action="clear-filters"${sum.any ? '' : ' hidden'}>Clear filters</button></div>
+    </div>
+  </aside>
+  <div class="dash-main">
+    <div class="dash-bar">
+      <div class="tabs" role="tablist" aria-label="View">
+        <button type="button" role="tab" id="tab-table" data-view="table" aria-selected="${view === 'table'}" aria-controls="results" tabindex="${view === 'table' ? 0 : -1}">Table</button>
+        <button type="button" role="tab" id="tab-landscape" data-view="landscape" aria-selected="${view === 'landscape'}" aria-controls="results" tabindex="${view === 'landscape' ? 0 : -1}">Landscape</button>
+      </div>
+      <p id="result-count" class="result-count" role="status" aria-live="polite">${esc(res.count)}</p>
+    </div>
+    <h2 class="vh">Trends</h2>
+    <div id="results" role="tabpanel" aria-labelledby="tab-${view}">${panelHtml(res.list)}</div>
   </div>
-  <div class="filter-panel" id="filter-panel">
-    <div class="field"><label for="f-category">Category</label><select id="f-category" name="category">${options(tx.categories, f.category, 'All categories')}</select></div>
-    ${chipRadios('maturity', 'Maturity', tx.maturity, f.maturity, 'All')}
-    ${chipRadios('impact', 'Impact', tx.impact, f.impact, 'All')}
-    ${chipRadios('momentum', 'Momentum', tx.momentum, f.momentum, 'All')}
-    <div class="panel-actions">${chipCheck('watchOnly', 'f-watch', 'Watchlist only', f.watchOnly, 'star')}<button type="button" class="btn btn-compact" id="clear-filters" data-action="clear-filters"${sum.any ? '' : ' hidden'}>Clear filters</button></div>
-  </div>
-</form>
-<section class="landscape" id="landscape" aria-labelledby="h-landscape"${res.list.length ? '' : ' hidden'}>
-  <h2 id="h-landscape">Landscape</h2>
-  <p class="small muted">Maturity runs left to right and impact runs bottom to top. Each trend is a link, and the arrow shows momentum. The filters above apply here too.</p>
-  <div id="landscape-body">${landscape(res.list, tx)}</div>
-</section>
-<h2 class="vh">Trends</h2>
-<div id="results">${res.html}</div>`
+  <aside class="preview" id="preview" aria-label="Selected trend">${previewHtml()}</aside>
+</form>`
   };
 }
 
 function bindDashboard(root, api) {
   const form = root.querySelector('#filter-form');
   const update = () => {
-    const r = dashboardResults();
+    const r = results();
     root.querySelector('#result-count').textContent = r.count;
-    root.querySelector('#results').innerHTML = r.html;
-    root.querySelector('#landscape-body').innerHTML = landscape(r.list, state.taxonomy);
-    root.querySelector('#landscape').hidden = r.list.length === 0;
+    root.querySelector('#results').innerHTML = panelHtml(r.list);
+    root.querySelector('#preview').innerHTML = previewHtml();
     const sum = filterSummary();
     root.querySelector('#filter-count').textContent = sum.n ? ` (${sum.n})` : '';
     root.querySelector('#clear-filters').hidden = !sum.any;
   };
+  const select = (id) => {
+    if (!id || id === selectedId) return;
+    selectedId = id;
+    root.querySelectorAll('.trow').forEach((row) => { if (row.dataset.trend === id) row.dataset.selected = 'true'; else delete row.dataset.selected; });
+    root.querySelector('#preview').innerHTML = previewHtml();
+  };
+  const setView = (next, focus) => {
+    view = next;
+    root.querySelectorAll('[role="tab"]').forEach((tab) => {
+      const on = tab.dataset.view === view;
+      tab.setAttribute('aria-selected', String(on));
+      tab.tabIndex = on ? 0 : -1;
+      if (on && focus) tab.focus();
+    });
+    root.querySelector('#results').setAttribute('aria-labelledby', `tab-${view}`);
+    form.dataset.view = view;
+    update();
+  };
+
   form.addEventListener('input', () => {
     const d = new FormData(form);
     state.filters = {
@@ -607,24 +698,47 @@ function bindDashboard(root, api) {
       maturity: String(d.get('maturity') || ''),
       impact: String(d.get('impact') || ''),
       momentum: String(d.get('momentum') || ''),
-      sort: String(d.get('sort') || 'impact'),
       watchOnly: d.get('watchOnly') !== null
     };
     saveFilters();
     update();
   });
   form.addEventListener('submit', (e) => e.preventDefault());
+
   const toggle = root.querySelector('#filter-toggle');
   toggle.addEventListener('click', () => {
     panelOpen = !panelOpen;
     form.classList.toggle('open', panelOpen);
     toggle.setAttribute('aria-expanded', String(panelOpen));
   });
+
   root.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-action="clear-filters"]');
-    if (!btn) return;
-    resetFilters();
-    api.refresh({ focusSelector: '#f-text' });
+    const sortBtn = e.target.closest('[data-sort]');
+    if (sortBtn) {
+      state.filters = { ...state.filters, sort: sortBtn.dataset.sort };
+      saveFilters();
+      update();
+      const again = root.querySelector(`[data-sort="${CSS.escape(sortBtn.dataset.sort)}"]`);
+      if (again) again.focus();
+      return;
+    }
+    const tab = e.target.closest('[role="tab"]');
+    if (tab) { setView(tab.dataset.view, false); return; }
+    const row = e.target.closest('.trow');
+    if (row && !e.target.closest('a, button')) { select(row.dataset.trend); return; }
+    if (e.target.closest('[data-action="clear-filters"]')) {
+      resetFilters();
+      api.refresh({ focusSelector: '#f-text' });
+    }
+  });
+  root.addEventListener('focusin', (e) => {
+    const row = e.target.closest && e.target.closest('.trow');
+    if (row) select(row.dataset.trend);
+  });
+  root.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    e.preventDefault();
+    setView(view === 'table' ? 'landscape' : 'table', true);
   });
 }
 
@@ -662,8 +776,13 @@ function renderTrend(id) {
 <h1 tabindex="-1">${esc(t.title)}</h1>
 <p class="chips">${categoryChips(t, tx)}</p>
 <div class="trend-head">
-  <p class="badges">${badge('maturity', t.maturity, tx)} ${badge('impact', t.impact, tx)} ${badge('momentum', t.momentum, tx)} ${verificationBadge(t)}</p>
-  <div class="trend-actions"><p class="small">${dateLine(t, ctx.isStale(t.lastUpdated))}</p>${watchButton(t.id, ctx.isWatched(t.id), t.title)}</div>
+  <dl class="spec-head">
+    <div><dt>Status</dt><dd>${valueMark('maturity', t.maturity, tx)}</dd></div>
+    <div><dt>Impact</dt><dd>${valueMark('impact', t.impact, tx)}</dd></div>
+    <div><dt>Momentum</dt><dd>${valueMark('momentum', t.momentum, tx)}</dd></div>
+    <div><dt>This review</dt><dd><time datetime="${esc(t.lastUpdated)}">${esc(t.lastUpdated)}</time>${ctx.isStale(t.lastUpdated) ? ' <span class="badge badge-warn">May be stale</span>' : ''}</dd></div>
+  </dl>
+  <div class="trend-actions">${verificationBadge(t)}${watchButton(t.id, ctx.isWatched(t.id), t.title)}</div>
 </div>
 ${verification}
 <div class="detail">
@@ -672,7 +791,7 @@ ${verification}
     <section aria-labelledby="h-why"><h2 id="h-why">Why it matters</h2><p>${esc(t.whyItMatters)}</p></section>
     <section aria-labelledby="h-risks"><h2 id="h-risks">Risks and challenges</h2>${list(t.risks)}</section>
     <section aria-labelledby="h-recs"><h2 id="h-recs">Recommendations</h2>
-      <ul class="rec-list" aria-label="Recommendations for this trend">${recs.map((r) => recCard(r, ctx)).join('')}</ul></section>
+      ${recs.length ? recTable(recs, ctx, 'Recommendations for this trend') : '<p class="muted">None listed.</p>'}</section>
     <section aria-labelledby="h-rel"><h2 id="h-rel">Related trends</h2>${related.length
       ? `<ul>${related.map((r) => `<li><a href="#/trend/${encodeURIComponent(r.id)}">${esc(r.title)}</a> <span class="muted small">(${esc(labelOf(tx.categories, r.categories[0]))})</span></li>`).join('')}</ul>`
       : '<p class="muted">None listed.</p>'}</section>
@@ -701,7 +820,7 @@ function playbookResults() {
   const list = sortRecs(filterRecs(state.recommendations, state.recFilters), state.recFilters.sort);
   const count = `${list.length} of ${state.recommendations.length} recommendations shown`;
   const html = list.length
-    ? `<ol class="rec-list" aria-label="Recommendations">${list.map((r) => recCard(r, ctx)).join('')}</ol>`
+    ? recTable(list, ctx)
     : emptyState('No recommendations match these filters.', '<p><button type="button" class="btn" data-action="clear-rec-filters">Clear filters</button></p>');
   return { count, html };
 }
@@ -816,8 +935,8 @@ function renderWatchlist() {
     <span id="export-status" class="small" role="status"></span>
   </div>
 </div>
-<section aria-labelledby="h-wt"><h2 id="h-wt">Watched trends</h2><ul class="grid">${trends.map((t) => trendCard(t, ctx)).join('')}</ul></section>
-<section aria-labelledby="h-wr"><h2 id="h-wr">Recommendations for watched trends</h2><ol class="rec-list">${recs.map((r) => recCard(r, ctx)).join('')}</ol></section>`
+<section aria-labelledby="h-wt"><h2 id="h-wt">Watched trends</h2>${trendTable(trends, ctx)}</section>
+<section aria-labelledby="h-wr"><h2 id="h-wr">Recommendations for watched trends</h2>${recTable(recs, ctx, 'Recommendations for watched trends')}</section>`
   };
 }
 
@@ -919,17 +1038,21 @@ function itemHtml(i) {
   const url = safeUrl(i.link);
   const title = url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(i.title)}<span class="vh"> (opens in a new tab)</span></a>` : esc(i.title);
   const isNew = isNewItem(i, baseline || 0);
-  const when = i.published ? `<time datetime="${esc(i.published)}">${esc(fmtDate(i.published))}</time>` : '';
-  return `<li class="card feed-item">
-  <h3 class="card-title">${title}</h3>
-  <p class="small muted feed-meta">${isNew ? '<span class="badge badge-new">New</span> ' : ''}${esc(i.source)}${when ? ` &middot; ${when}` : ''}</p>
-  ${i.summary ? `<p class="feed-summary">${esc(i.summary)}</p>` : ''}
-</li>`;
+  const when = i.published ? `<time datetime="${esc(i.published)}">${esc(fmtDate(i.published))}</time>` : '<span class="muted">Undated</span>';
+  return `<tr class="frow feed-item">
+  <td class="f-date">${when}</td>
+  <td class="f-src">${esc(i.source)}</td>
+  <td class="f-main"><span class="f-title">${title}</span>${isNew ? ' <span class="badge badge-new">New</span>' : ''}${i.summary ? `<span class="feed-summary">${esc(i.summary)}</span>` : ''}</td>
+</tr>`;
+}
+
+function feedTable(rows, label) {
+  return `<table class="ttable ftable"><caption class="vh">${esc(label)}</caption><thead class="vh"><tr><th scope="col">Date</th><th scope="col">Source</th><th scope="col">Headline</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function skeletonHtml() {
-  const card = '<li class="card skel" aria-hidden="true"><span class="skel-line skel-title"></span><span class="skel-line skel-meta"></span><span class="skel-line"></span><span class="skel-line skel-short"></span></li>';
-  return `<ul class="grid">${card.repeat(6)}</ul>`;
+  const row = '<tr class="frow skel" aria-hidden="true"><td class="f-date"><span class="skel-line skel-meta"></span></td><td class="f-src"><span class="skel-line skel-meta"></span></td><td class="f-main"><span class="skel-line skel-title"></span><span class="skel-line"></span></td></tr>';
+  return feedTable(row.repeat(6), 'Loading the latest items');
 }
 
 function bodyHtml() {
@@ -945,7 +1068,7 @@ function bodyHtml() {
   if (!items.length) return `${staleNote}${failNote}${emptyState('No items for this source yet.')}`;
   const groups = groupFeedItems(items).map((g) => `<section class="feed-group" aria-labelledby="g-${esc(g.key)}">
   <h2 id="g-${esc(g.key)}" class="group-title">${esc(g.label)} <span class="muted small">(${g.items.length})</span></h2>
-  <ul class="grid">${g.items.map(itemHtml).join('')}</ul>
+  ${feedTable(g.items.map(itemHtml).join(''), g.label)}
 </section>`).join('');
   return `${staleNote}${failNote}${groups}`;
 }

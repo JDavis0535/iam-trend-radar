@@ -3,7 +3,7 @@
 
 import { state, makeCtx } from '../store.js';
 import { filterRecs, sortRecs, defaultRecFilters, countActiveRecs } from '../filters.js';
-import { esc, options, recCard, emptyState, chipRadios, chipCheck } from '../ui.js';
+import { esc, options, recTable, emptyState, chipRadios, chipCheck } from '../ui.js';
 
 // Whether the filter panel is open on narrow screens (always shown on wide ones). Module-level so it survives re-renders.
 let recPanelOpen = false;
@@ -13,7 +13,7 @@ function playbookResults() {
   const list = sortRecs(filterRecs(state.recommendations, state.recFilters), state.recFilters.sort);
   const count = `${list.length} of ${state.recommendations.length} recommendations shown`;
   const html = list.length
-    ? `<ol class="rec-list" aria-label="Recommendations">${list.map((r) => recCard(r, ctx)).join('')}</ol>`
+    ? recTable(list, ctx)
     : emptyState('No recommendations match these filters.', '<p><button type="button" class="btn" data-action="clear-rec-filters">Clear filters</button></p>');
   return { count, html };
 }

@@ -3,7 +3,7 @@
 import { state, makeCtx, clearWatchlist } from '../store.js';
 import { sortRecs, sortTrends } from '../filters.js';
 import { watchlistToMarkdown } from '../export.js';
-import { esc, trendCard, recCard, emptyState } from '../ui.js';
+import { esc, trendTable, recTable, emptyState } from '../ui.js';
 
 // Whether the export panel is open. Kept here so a re-render (e.g. un-watching a trend) does not close it;
 // reset when the user navigates to another route.
@@ -40,8 +40,8 @@ export function renderWatchlist() {
     <span id="export-status" class="small" role="status"></span>
   </div>
 </div>
-<section aria-labelledby="h-wt"><h2 id="h-wt">Watched trends</h2><ul class="grid">${trends.map((t) => trendCard(t, ctx)).join('')}</ul></section>
-<section aria-labelledby="h-wr"><h2 id="h-wr">Recommendations for watched trends</h2><ol class="rec-list">${recs.map((r) => recCard(r, ctx)).join('')}</ol></section>`
+<section aria-labelledby="h-wt"><h2 id="h-wt">Watched trends</h2>${trendTable(trends, ctx)}</section>
+<section aria-labelledby="h-wr"><h2 id="h-wr">Recommendations for watched trends</h2>${recTable(recs, ctx, 'Recommendations for watched trends')}</section>`
   };
 }
 
