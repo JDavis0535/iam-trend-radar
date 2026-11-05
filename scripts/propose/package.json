@@ -1,0 +1,9 @@
+{
+  "name": "iam-trend-radar-propose",
+  "private": true,
+  "type": "module",
+  "description": "Isolated dependencies for the weekly Claude-powered content proposal job. The site itself has no dependencies.",
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.6.0"
+  }
+}

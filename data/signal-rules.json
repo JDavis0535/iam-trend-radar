@@ -1,0 +1,12 @@
+{
+  "passkeys-passwordless": ["passkey", "passkeys", "passwordless", "fido2", "webauthn", "fido alliance", "phishing-resistant", "authenticator"],
+  "zero-trust-identity": ["zero trust", "zero-trust", "conditional access", "continuous authentication", "800-207"],
+  "itdr": ["itdr", "identity threat detection", "account takeover", "credential theft", "credential stuffing", "token theft", "session hijacking", "infostealer", "active directory", "entra id"],
+  "non-human-identity": ["non-human identity", "non-human identities", "machine identity", "machine identities", "service account", "service accounts", "workload identity", "api key leak", "secrets sprawl", "spiffe"],
+  "iga-modernization": ["identity governance", "access review", "access certification", "joiner mover leaver", "scim", "identity lifecycle", "iga"],
+  "pam-just-in-time": ["privileged access", "just-in-time", "privileged account", "privileged accounts", "least privilege", "standing privilege", "pam"],
+  "ciem-cloud-entitlements": ["ciem", "cloud entitlement", "cloud entitlements", "excessive permissions", "iam policy", "iam role", "iam roles"],
+  "decentralized-identity-wallets": ["digital identity wallet", "identity wallet", "verifiable credential", "verifiable credentials", "decentralized identifier", "decentralized identity", "eudi", "eidas", "mobile driver's license", "mdl", "openid4vc", "openid for verifiable"],
+  "ai-agent-identity": ["ai agent", "ai agents", "agentic", "agent identity", "model context protocol", "mcp", "agent authentication", "agent authorization"],
+  "identity-regulation": ["nis2", "dora", "800-63", "eidas", "identity assurance", "cyber resilience act"]
+}

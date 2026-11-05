@@ -19,6 +19,10 @@ All content lives in `data/` as UTF-8 JSON. Edit `trends.json` and `recommendati
 
 Suggested cadence is a quarterly review of every item.
 
+## Automated proposals
+
+A weekly workflow can open a pull request (label `auto-content`) with edits that Claude proposed from the recent feed; see the README. When you review one: open each linked headline and check that it supports the change, be sceptical of maturity and momentum changes, and look for unsourced numbers. Changed trends carry `needsVerification: true` with a note naming the feed items; once you have checked the claims, set `needsVerification` to `false` and clear `verificationNotes` in the same PR, then merge. Edit or delete any proposal you do not agree with before merging. When you add a trend, also add its keywords to `data/signal-rules.json`.
+
 ## Add or update a trend
 
 Add an object to the array in `data/trends.json`. For an update, edit the fields and set `lastUpdated` to today.

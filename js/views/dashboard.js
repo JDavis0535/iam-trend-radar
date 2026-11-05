@@ -70,11 +70,12 @@ export function renderDashboard() {
   const sum = filterSummary();
   const flagged = state.trends.filter((t) => t.needsVerification).length;
   const rising = state.trends.filter((t) => t.momentum === 'rising').length;
+  const active = state.trends.filter((t) => (state.signals.get(t.id) || { count30: 0 }).count30 > 0).length;
   return {
     title: 'Dashboard',
     html: `<h1 tabindex="-1">What is changing in identity and access</h1>
 <p class="lead">How mature and impactful each trend is, and what to do about it.</p>
-<p class="summary-line" aria-label="Dataset summary"><strong>${state.trends.length}</strong> trends, <strong>${state.recommendations.length}</strong> recommendations, <strong>${rising}</strong> with rising momentum${flagged ? `, <strong>${flagged}</strong> needing verification` : ''}. Data updated <time datetime="${esc(state.meta.lastUpdated)}">${esc(state.meta.lastUpdated)}</time>.</p>
+<p class="summary-line" aria-label="Dataset summary"><strong>${state.trends.length}</strong> trends, <strong>${state.recommendations.length}</strong> recommendations, <strong>${rising}</strong> with rising momentum${flagged ? `, <strong>${flagged}</strong> needing verification` : ''}${state.signals.size ? `, ${active} with headlines in the last 30 days` : ''}. Data updated <time datetime="${esc(state.meta.lastUpdated)}">${esc(state.meta.lastUpdated)}</time>.</p>
 <form class="dash${panelOpen ? ' open' : ''}" data-view="${view}" id="filter-form" role="search" aria-label="Filter trends" autocomplete="off">
   <aside class="rail" aria-label="Filters">
     <div class="rail-search">

@@ -237,6 +237,12 @@ function watchButton(id, watched, title) {
   return `<button type="button" class="btn btn-watch" data-watch="${esc(id)}" aria-pressed="${watched ? 'true' : 'false'}" aria-label="Watch ${esc(title)}">${icon('star')}<span>${watched ? 'Watching' : 'Watch'}</span></button>`;
 }
 
+/** " · 3 headlines (30 days)" for the end of a trend row's category line, or '' when there is no signal. */
+function signalNote(sig) {
+  if (!sig || !(sig.count30 > 0)) return '';
+  return `<span class="c-sig"> &middot; ${sig.count30} headline${sig.count30 === 1 ? '' : 's'} (30 days)</span>`;
+}
+
 /** One register row for a trend (dashboard and watchlist). ctx: { taxonomy, isWatched(id), isStale(date) }. */
 function trendRow(t, ctx, selected) {
   const tx = ctx.taxonomy;
@@ -245,7 +251,7 @@ function trendRow(t, ctx, selected) {
   const n = (t.sources || []).length;
   return `<tr class="trow" data-trend="${esc(t.id)}"${selected ? ' data-selected="true"' : ''}>
   <td class="c-status"><span class="mark" aria-hidden="true">${ladder(t.maturity, tx)}</span><span class="vh">Maturity: </span><span class="c-label">${esc(labelOf(tx.maturity, t.maturity))}</span></td>
-  <td class="c-trend"><a href="#/trend/${encodeURIComponent(t.id)}">${esc(t.title)}</a>${flag}<span class="c-cat">${esc(cats)}<span class="c-src"> &middot; ${n} source${n === 1 ? '' : 's'}</span></span></td>
+  <td class="c-trend"><a href="#/trend/${encodeURIComponent(t.id)}">${esc(t.title)}</a>${flag}<span class="c-cat">${esc(cats)}<span class="c-src"> &middot; ${n} source${n === 1 ? '' : 's'}</span>${signalNote(ctx.signal && ctx.signal(t.id))}</span></td>
   <td class="c-impact">${valueMark('impact', t.impact, tx)}</td>
   <td class="c-mom">${valueMark('momentum', t.momentum, tx)}</td>
   <td class="c-rev"><time datetime="${esc(t.lastUpdated)}">${esc(t.lastUpdated)}</time>${ctx.isStale(t.lastUpdated) ? ' <span class="badge badge-warn">May be stale</span>' : ''}</td>
@@ -441,6 +447,8 @@ const state = {
   recommendations: [],
   trendMap: new Map(),
   recMap: new Map(),
+  signals: new Map(), // trendId -> { count30, count90, lastSignal, items[] } from data/signals.json (empty if unavailable)
+  signalsAt: '',
   watch: new Set(),
   filters: defaultFilters(),
   recFilters: defaultRecFilters(),
@@ -482,6 +490,44 @@ async function loadData() {
   state.recMap = new Map(raw.recommendations.map((r) => [r.id, r]));
   loadWatchlist();
   loadFilters();
+}
+
+const SIGNALS_MAX_AGE_DAYS = 14;
+
+/** Pure: validates a parsed signals.json against the known trend ids. Returns a Map, or null if unusable or too old. */
+function parseSignals(raw, trendIds, now = Date.now()) {
+  if (!raw || typeof raw !== 'object' || !raw.trends || typeof raw.trends !== 'object') return null;
+  const at = Date.parse(raw.generatedAt);
+  if (Number.isNaN(at) || now - at > SIGNALS_MAX_AGE_DAYS * 86400000) return null;
+  const out = new Map();
+  for (const id of trendIds) {
+    const s = raw.trends[id];
+    if (!s || !Number.isFinite(s.count30) || !Number.isFinite(s.count90) || !Array.isArray(s.items)) continue;
+    const items = s.items.filter((i) => i && typeof i.title === 'string' && typeof i.link === 'string').slice(0, 5);
+    out.set(id, { count30: s.count30, count90: s.count90, lastSignal: typeof s.lastSignal === 'string' ? s.lastSignal : null, items });
+  }
+  return out;
+}
+
+/**
+ * Loads the derived headline signals (data/signals.json, rebuilt by the scheduled workflow). Optional: it needs
+ * http(s), is ignored when missing or older than SIGNALS_MAX_AGE_DAYS, never throws, and gives up after timeoutMs
+ * so a slow request can never block the first render. Returns true when signals were loaded.
+ */
+async function loadSignals(timeoutMs = 3000) {
+  state.signals = new Map();
+  state.signalsAt = '';
+  try {
+    if (globalThis.location && globalThis.location.protocol === 'file:') return false;
+    const res = await fetch('data/signals.json', { cache: 'no-cache', signal: AbortSignal.timeout(timeoutMs) });
+    if (!res.ok) return false;
+    const raw = await res.json();
+    const map = parseSignals(raw, [...state.trendMap.keys()]);
+    if (!map) return false;
+    state.signals = map;
+    state.signalsAt = raw.generatedAt;
+    return true;
+  } catch { return false; }
 }
 
 function loadWatchlist() {
@@ -545,6 +591,7 @@ function makeCtx() {
     isWatched,
     isStale: (d) => isStale(d),
     trendById: (id) => state.trendMap.get(id),
+    signal: (id) => state.signals.get(id) || null,
     recById: (id) => state.recMap.get(id),
     score: priorityScore
   };
@@ -623,11 +670,12 @@ function renderDashboard() {
   const sum = filterSummary();
   const flagged = state.trends.filter((t) => t.needsVerification).length;
   const rising = state.trends.filter((t) => t.momentum === 'rising').length;
+  const active = state.trends.filter((t) => (state.signals.get(t.id) || { count30: 0 }).count30 > 0).length;
   return {
     title: 'Dashboard',
     html: `<h1 tabindex="-1">What is changing in identity and access</h1>
 <p class="lead">How mature and impactful each trend is, and what to do about it.</p>
-<p class="summary-line" aria-label="Dataset summary"><strong>${state.trends.length}</strong> trends, <strong>${state.recommendations.length}</strong> recommendations, <strong>${rising}</strong> with rising momentum${flagged ? `, <strong>${flagged}</strong> needing verification` : ''}. Data updated <time datetime="${esc(state.meta.lastUpdated)}">${esc(state.meta.lastUpdated)}</time>.</p>
+<p class="summary-line" aria-label="Dataset summary"><strong>${state.trends.length}</strong> trends, <strong>${state.recommendations.length}</strong> recommendations, <strong>${rising}</strong> with rising momentum${flagged ? `, <strong>${flagged}</strong> needing verification` : ''}${state.signals.size ? `, ${active} with headlines in the last 30 days` : ''}. Data updated <time datetime="${esc(state.meta.lastUpdated)}">${esc(state.meta.lastUpdated)}</time>.</p>
 <form class="dash${panelOpen ? ' open' : ''}" data-view="${view}" id="filter-form" role="search" aria-label="Filter trends" autocomplete="off">
   <aside class="rail" aria-label="Filters">
     <div class="rail-search">
@@ -750,6 +798,19 @@ function bindDashboard(root, api) {
 
 
 
+/** "In the news": keyword-matched headlines from the official feeds. Empty string when there are none. */
+function newsSection(sig) {
+  if (!sig || !sig.items.length) return '';
+  const rows = sig.items.map((i) => {
+    const url = safeUrl(i.link);
+    const title = url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(i.title)}<span class="vh"> (opens in a new tab)</span></a>` : esc(i.title);
+    const when = typeof i.published === 'string' ? i.published.slice(0, 10) : '';
+    return `<li>${title}<br><span class="small muted">${esc(i.source || '')}${when ? ` &middot; <time datetime="${esc(when)}">${esc(when)}</time>` : ''}</span></li>`;
+  }).join('');
+  return `<section aria-labelledby="h-news"><h2 id="h-news">In the news</h2><ul class="sources">${rows}</ul>
+      <p class="small muted">Matched to this trend by keyword from official feeds. These links are not reviewed and do not change the assessment above.</p></section>`;
+}
+
 function sourceItem(s) {
   const url = safeUrl(s.url);
   const title = url
@@ -790,6 +851,7 @@ ${verification}
     <section aria-labelledby="h-summary"><h2 id="h-summary">Summary</h2><p class="lead-text">${esc(t.summary)}</p></section>
     <section aria-labelledby="h-why"><h2 id="h-why">Why it matters</h2><p>${esc(t.whyItMatters)}</p></section>
     <section aria-labelledby="h-risks"><h2 id="h-risks">Risks and challenges</h2>${list(t.risks)}</section>
+    ${newsSection(ctx.signal(t.id))}
     <section aria-labelledby="h-recs"><h2 id="h-recs">Recommendations</h2>
       ${recs.length ? recTable(recs, ctx, 'Recommendations for this trend') : '<p class="muted">None listed.</p>'}</section>
     <section aria-labelledby="h-rel"><h2 id="h-rel">Related trends</h2>${related.length
@@ -1362,6 +1424,7 @@ async function main() {
     showLoadError(root, e.message);
     return;
   }
+  await loadSignals(); // optional and time-boxed; the site renders the same without it
   const footer = document.getElementById('data-version');
   if (footer) footer.textContent = `Dataset ${state.meta.datasetVersion}, updated ${state.meta.lastUpdated}. ${state.meta.disclaimer}`;
 

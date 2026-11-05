@@ -1,7 +1,7 @@
 // app.js - entry point: loads data, wires the global watch-toggle handler and starts the router.
 // Shows a clear error view (with local-server instructions) if the data cannot be loaded.
 
-import { loadData, toggleWatch, state } from './store.js';
+import { loadData, loadSignals, toggleWatch, state } from './store.js';
 import { startRouter, refreshCurrent } from './router.js';
 import { esc } from './ui.js';
 import { renderDashboard, bindDashboard } from './views/dashboard.js';
@@ -43,6 +43,7 @@ async function main() {
     showLoadError(root, e.message);
     return;
   }
+  await loadSignals(); // optional and time-boxed; the site renders the same without it
   const footer = document.getElementById('data-version');
   if (footer) footer.textContent = `Dataset ${state.meta.datasetVersion}, updated ${state.meta.lastUpdated}. ${state.meta.disclaimer}`;
 

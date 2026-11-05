@@ -46,12 +46,15 @@ js/                   Source modules (ES modules)
 data/
   meta.json           Dataset version, last-updated date, disclaimer
   taxonomy.json       Allowed values for categories, maturity, impact, momentum, effort, horizon
+  signal-rules.json   Keywords that match feed items to each trend
   trends.json         Trends (edit this)
   recommendations.json  Recommendations (edit this)
   data.js             GENERATED bundle of the four JSON files for file:// use
 dist/app.js           GENERATED single classic script built from js/
 scripts/
   validate-data.mjs   Schema, reference and content-policy checks
+  fetch-feed.mjs, build-signals.mjs   Feed refresh and keyword signals (run on a schedule)
+  propose/            Weekly Claude-powered proposal job (its own package.json; the site has no dependencies)
   build-data.mjs      Validates, then regenerates data/data.js and dist/app.js
 docs/                 PLAN.md, USAGE.md, CONTRIBUTING-DATA.md and project notes
 ```
@@ -87,7 +90,9 @@ No license has been chosen yet.
 ## Latest feed and publishing
 
 - **Latest feed (`#/feed`)**: headlines from official feeds (FIDO Alliance, OpenID Foundation, NIST, CISA, W3C), written to `data/feed.json` by `node scripts/fetch-feed.mjs`. Broad feeds (NIST, CISA, W3C) are filtered to identity-related items. If a source is down, its previous items are kept. The page re-checks the file every 15 minutes while open. The feed needs http(s); it does not load when `index.html` is opened from disk.
-- **Public hosting**: `.github/workflows/pages.yml` publishes only `index.html`, `css/`, `dist/` and `data/` to GitHub Pages on every push to `main`, manually, and every 6 hours (refreshing the feed each time). Tests must pass before it deploys. The refreshed feed is deployed but not committed.
+- **Headline signals**: `node scripts/build-signals.mjs` matches feed items to trends using the keywords in `data/signal-rules.json` and writes `data/signals.json`. The dashboard shows a "headlines (30 days)" count per trend and each trend page lists its latest matches under "In the news". Signals are derived data: they never change a trend's text, maturity or momentum, and the site ignores them if the file is missing or older than 14 days. Edit the keywords when you add a trend (a test fails if a trend has no rule).
+- **Weekly Claude proposals (pull request, not auto-publish)**: `.github/workflows/propose-updates.yml` runs every Monday. `scripts/propose/propose-updates.mjs` sends the current trends, recommendations and recent feed to Claude (`claude-opus-5-5`, override with `IAM_PROPOSE_MODEL`) and asks for small, evidence-backed edits. Guard rails in `scripts/propose/proposals-lib.mjs` apply only edits that cite real feed items, touch allow-listed fields of existing items, and keep the dataset valid. Sources are added from the cited feed items, never from URLs the model wrote, and every changed trend is marked **Needs verification** until a reviewer clears it. The result is a pull request labelled `auto-content` that lists before/after text and evidence; nothing is published until you merge. Only one such PR is open at a time. Setup: add the repository secret `ANTHROPIC_API_KEY` and enable Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests". Without the secret the job does nothing. Run it by hand with the "Run workflow" button, or locally with `node scripts/propose/propose-updates.mjs --dry-run` (after `npm ci --prefix scripts/propose`).
+- **Public hosting**: `.github/workflows/pages.yml` publishes only `index.html`, `css/`, `dist/` and `data/` to GitHub Pages on every push to `main`, manually, and every 6 hours (refreshing the feed and the headline signals each time). Tests must pass before it deploys. The refreshed feed and signals are deployed but not committed.
 - **Before going public**: five trends are flagged `needsVerification`; review them (see `docs/CONTRIBUTING-DATA.md`).
 
 ## Fonts
