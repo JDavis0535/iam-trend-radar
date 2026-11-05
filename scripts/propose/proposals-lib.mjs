@@ -25,9 +25,11 @@ const SOURCE_TYPE = { fido: 'news', openid: 'news', nist: 'government', cisa: 'g
 
 /** JSON Schema for the model's reply. Every field is nullable: null means "leave this field alone". */
 export function responseSchema(taxonomy) {
-  const enumOf = (key) => ({ type: ['string', 'null'], enum: [...taxonomy[key].map((x) => x.id), null] });
-  const text = { type: ['string', 'null'] };
-  const list = { type: ['array', 'null'], items: { type: 'string' } };
+  // Nullable values use anyOf: the API rejects an enum next to a type array ("Enum value ... does not match declared type").
+  const nullable = (schema) => ({ anyOf: [schema, { type: 'null' }] });
+  const enumOf = (key) => nullable({ type: 'string', enum: taxonomy[key].map((x) => x.id) });
+  const text = nullable({ type: 'string' });
+  const list = nullable({ type: 'array', items: { type: 'string' } });
   const changes = {
     type: 'object',
     additionalProperties: false,

@@ -109,11 +109,14 @@ test('parseReply accepts plain or fenced JSON and rejects everything else', () =
   assert.equal(parseReply(''), null);
 });
 
-test('responseSchema lists every field as required and nullable enums include null', () => {
+test('responseSchema lists every field as required and makes nullable values anyOf-null', () => {
   const s = responseSchema(data.taxonomy);
   const changes = s.properties.proposals.items.properties.changes;
   assert.deepEqual([...changes.required].sort(), [...ALL_FIELDS].sort());
-  assert.ok(changes.properties.momentum.enum.includes(null) && changes.properties.momentum.enum.includes('rising'));
+  const [value, nul] = changes.properties.momentum.anyOf;
+  assert.deepEqual(nul, { type: 'null' });
+  assert.ok(value.enum.includes('rising') && !value.enum.includes(null));
+  assert.ok(!JSON.stringify(s).includes('"type":["'), 'no type arrays (the API rejects them next to enum)');
   assert.equal(changes.additionalProperties, false);
 });
 
