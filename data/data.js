@@ -3,7 +3,7 @@ window.IAM_DATA = {
  "meta": {
   "schemaVersion": 1,
   "datasetVersion": "2026.11.0",
-  "lastUpdated": "2026-11-04",
+  "lastUpdated": "2026-11-05",
   "disclaimer": "Curated summary; verify before acting. Anything marked \"Needs verification\" has unconfirmed claims."
  },
  "taxonomy": {
@@ -177,7 +177,7 @@ window.IAM_DATA = {
    "impact": "high",
    "momentum": "rising",
    "summary": "Passkeys are FIDO2/WebAuthn credentials that replace passwords with public-key cryptography bound to a device or synced across a user's devices, resisting phishing and credential reuse.",
-   "whyItMatters": "Passwords and one-time codes are widely targeted by phishing and credential stuffing. Passkeys remove the shared secret from the login flow, which can reduce phishing exposure and password-reset workload, but they force a rethink of enrollment, recovery and lost-device processes.",
+   "whyItMatters": "Passwords and one-time codes are widely targeted by phishing and credential stuffing. Passkeys remove the shared secret from the login flow, which can reduce phishing exposure and password-reset workload, but they force a rethink of enrollment, recovery and lost-device processes. The FIDO Alliance estimated in October 2026 that 7 billion passkeys are in use worldwide.",
    "risks": [
     "Account recovery can become the weakest link",
     "Synced passkeys shift trust to the credential manager or platform provider",
@@ -186,7 +186,7 @@ window.IAM_DATA = {
    ],
    "keyStandards": [
     "FIDO2 (WebAuthn + CTAP)",
-    "W3C Web Authentication",
+    "W3C Web Authentication Level 3 (W3C Recommendation)",
     "NIST SP 800-63B"
    ],
    "relatedTrends": [
@@ -216,11 +216,27 @@ window.IAM_DATA = {
      "type": "government",
      "published": "2017-06",
      "accessed": "2026-11-04"
+    },
+    {
+     "title": "Web Authentication: An API for accessing Public Key Credentials Level 3 is now a W3C Recommendation",
+     "publisher": "W3C News",
+     "url": "https://www.w3.org/news/2026/web-authentication-an-api-for-accessing-public-key-credentials-level-3-is-now-a-w3c-recommendation/",
+     "type": "standard",
+     "published": "2026-08-25",
+     "accessed": "2026-11-05"
+    },
+    {
+     "title": "7 Billion Passkeys and Counting: The Next Chapter of Passwordless Authentication",
+     "publisher": "FIDO Alliance",
+     "url": "https://fidoalliance.org/7-billion-passkeys-and-counting-the-next-chapter-of-passwordless-authentication/",
+     "type": "news",
+     "published": "2026-10-15",
+     "accessed": "2026-11-05"
     }
    ],
-   "needsVerification": false,
-   "verificationNotes": "",
-   "lastUpdated": "2026-11-04"
+   "needsVerification": true,
+   "verificationNotes": "Automated update on 2026-11-05 from https://www.w3.org/news/2026/web-authentication-an-api-for-accessing-public-key-credentials-level-3-is-now-a-w3c-recommendation/, https://fidoalliance.org/7-billion-passkeys-and-counting-the-next-chapter-of-passwordless-authentication/. Not reviewed by a person.",
+   "lastUpdated": "2026-11-05"
   },
   {
    "id": "zero-trust-identity",
@@ -541,7 +557,7 @@ window.IAM_DATA = {
    "impact": "medium",
    "momentum": "rising",
    "summary": "Verifiable credentials and digital identity wallets let people hold signed attestations and present them selectively, reducing reliance on centralized identity providers for some use cases.",
-   "whyItMatters": "Reusable, cryptographically verifiable credentials could simplify onboarding and proofing and improve privacy through selective disclosure. Ecosystem trust frameworks, wallet interoperability and issuer adoption are still maturing.",
+   "whyItMatters": "Reusable, cryptographically verifiable credentials could simplify onboarding and proofing and improve privacy through selective disclosure. Ecosystem trust frameworks, wallet interoperability and issuer adoption are still maturing. Supporting work is under way, including FIDO Alliance wallet certification frameworks and W3C drafts on credential threat models and revocation status lists.",
    "risks": [
     "Interoperability between credential formats and wallets",
     "Unclear trust frameworks and issuer accreditation",
@@ -580,11 +596,43 @@ window.IAM_DATA = {
      "type": "government",
      "published": "2024-04",
      "accessed": "2026-11-04"
+    },
+    {
+     "title": "Biometric Update: FIDO sets out certification framework for digital identity wallets",
+     "publisher": "FIDO Alliance",
+     "url": "https://fidoalliance.org/biometric-update-fido-sets-out-certification-framework-for-digital-identity-wallets/",
+     "type": "news",
+     "published": "2026-10-21",
+     "accessed": "2026-11-05"
+    },
+    {
+     "title": "FIDO Alliance Moves to Accelerate Digital Credentials Adoption at Scale",
+     "publisher": "FIDO Alliance",
+     "url": "https://fidoalliance.org/fido-alliance-moves-to-accelerate-digital-credentials-adoption-at-scale/",
+     "type": "news",
+     "published": "2026-10-20",
+     "accessed": "2026-11-05"
+    },
+    {
+     "title": "First Draft Notes: Verifiable Credential Threat Models",
+     "publisher": "W3C News",
+     "url": "https://www.w3.org/news/2026/first-draft-notes-verifiable-credential-threat-models/",
+     "type": "standard",
+     "published": "2026-10-08",
+     "accessed": "2026-11-05"
+    },
+    {
+     "title": "First Public Working Draft: Bitstring Status List v1.1",
+     "publisher": "W3C News",
+     "url": "https://www.w3.org/news/2026/first-public-working-draft-bitstring-status-list-v1-1/",
+     "type": "standard",
+     "published": "2026-09-24",
+     "accessed": "2026-11-05"
     }
    ],
-   "needsVerification": false,
-   "lastUpdated": "2026-11-04",
-   "verificationNotes": ""
+   "needsVerification": true,
+   "lastUpdated": "2026-11-05",
+   "verificationNotes": "Automated update on 2026-11-05 from https://fidoalliance.org/biometric-update-fido-sets-out-certification-framework-for-digital-identity-wallets/, https://fidoalliance.org/fido-alliance-moves-to-accelerate-digital-credentials-adoption-at-scale/, https://www.w3.org/news/2026/first-draft-notes-verifiable-credential-threat-models/, https://www.w3.org/news/2026/first-public-working-draft-bitstring-status-list-v1-1/. Not reviewed by a person."
   },
   {
    "id": "ai-agent-identity",
@@ -601,11 +649,13 @@ window.IAM_DATA = {
     "Over-broad delegated tokens give an agent more access than the task needs",
     "Prompt injection can turn legitimate agent access into misuse",
     "Weak attribution of agent actions in audit logs",
+    "Agents crossing security boundaries between providers are hard to identify and control",
     "Standards and protocols are still changing"
    ],
    "keyStandards": [
     "OAuth 2.x (IETF drafts)",
     "Model Context Protocol authorization",
+    "OpenID Foundation threat model for cross-boundary AI agents",
     "OWASP GenAI Security Project guidance"
    ],
    "relatedTrends": [
@@ -651,11 +701,19 @@ window.IAM_DATA = {
      "type": "vendor",
      "published": "2026-07",
      "accessed": "2026-11-04"
+    },
+    {
+     "title": "OIDF publishes threat model for cross-boundary AI agents",
+     "publisher": "OpenID Foundation",
+     "url": "https://openid.net/oidf-publishes-threat-model-for-cross-boundary-ai-agents/",
+     "type": "news",
+     "published": "2026-10-12",
+     "accessed": "2026-11-05"
     }
    ],
-   "needsVerification": false,
-   "verificationNotes": "",
-   "lastUpdated": "2026-11-04"
+   "needsVerification": true,
+   "verificationNotes": "Automated update on 2026-11-05 from https://openid.net/oidf-publishes-threat-model-for-cross-boundary-ai-agents/. Not reviewed by a person.",
+   "lastUpdated": "2026-11-05"
   },
   {
    "id": "identity-regulation",
@@ -759,6 +817,7 @@ window.IAM_DATA = {
    "steps": [
     "Map current reset and recovery flows and their weaknesses",
     "Define identity re-proofing requirements by risk level",
+    "Avoid knowledge-based questions as a recovery factor, since the underlying personal data can be exposed in breaches",
     "Add approval and notification steps for high-risk recovery",
     "Run a tabletop test of a lost-device scenario"
    ],
@@ -773,7 +832,7 @@ window.IAM_DATA = {
     "iam-architect",
     "ciso"
    ],
-   "lastUpdated": "2026-11-04"
+   "lastUpdated": "2026-11-05"
   },
   {
    "id": "rec-zt-baseline-assessment",
