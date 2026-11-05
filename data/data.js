@@ -3,7 +3,7 @@ window.IAM_DATA = {
  "meta": {
   "schemaVersion": 1,
   "datasetVersion": "2026.11.0",
-  "lastUpdated": "2026-11-04",
+  "lastUpdated": "2026-11-05",
   "disclaimer": "Curated summary; verify before acting. Anything marked \"Needs verification\" has unconfirmed claims."
  },
  "taxonomy": {
@@ -182,11 +182,12 @@ window.IAM_DATA = {
     "Account recovery can become the weakest link",
     "Synced passkeys shift trust to the credential manager or platform provider",
     "Legacy applications keep passwords alive in mixed estates",
-    "Attestation and assurance needs differ for regulated use cases"
+    "Attestation and assurance needs differ for regulated use cases",
+    "User enrollment lags availability: being offered passkeys does not mean users adopt them"
    ],
    "keyStandards": [
     "FIDO2 (WebAuthn + CTAP)",
-    "W3C Web Authentication",
+    "W3C Web Authentication Level 3 (W3C Recommendation)",
     "NIST SP 800-63B"
    ],
    "relatedTrends": [
@@ -216,11 +217,35 @@ window.IAM_DATA = {
      "type": "government",
      "published": "2017-06",
      "accessed": "2026-11-04"
+    },
+    {
+     "title": "Web Authentication: An API for accessing Public Key Credentials Level 3 is now a W3C Recommendation",
+     "publisher": "W3C News",
+     "url": "https://www.w3.org/news/2026/web-authentication-an-api-for-accessing-public-key-credentials-level-3-is-now-a-w3c-recommendation/",
+     "type": "standard",
+     "published": "2026-08-25",
+     "accessed": "2026-11-05"
+    },
+    {
+     "title": "Biometric Update: FIDO Alliance counts 7 billion passkeys as adoption gains momentum",
+     "publisher": "FIDO Alliance",
+     "url": "https://fidoalliance.org/biometric-update-fido-alliance-counts-7-billion-passkeys-as-adoption-gains-momentum/",
+     "type": "news",
+     "published": "2026-10-30",
+     "accessed": "2026-11-05"
+    },
+    {
+     "title": "Passkey Index 2026",
+     "publisher": "FIDO Alliance",
+     "url": "https://fidoalliance.org/passkey-index-2026/",
+     "type": "news",
+     "published": "2026-10-15",
+     "accessed": "2026-11-05"
     }
    ],
-   "needsVerification": false,
-   "verificationNotes": "",
-   "lastUpdated": "2026-11-04"
+   "needsVerification": true,
+   "verificationNotes": "Drafted by the automated weekly update on 2026-11-05 from https://www.w3.org/news/2026/web-authentication-an-api-for-accessing-public-key-credentials-level-3-is-now-a-w3c-recommendation/, https://fidoalliance.org/biometric-update-fido-alliance-counts-7-billion-passkeys-as-adoption-gains-momentum/, https://fidoalliance.org/passkey-index-2026/. Not yet confirmed by a reviewer.",
+   "lastUpdated": "2026-11-05"
   },
   {
    "id": "zero-trust-identity",
@@ -541,7 +566,7 @@ window.IAM_DATA = {
    "impact": "medium",
    "momentum": "rising",
    "summary": "Verifiable credentials and digital identity wallets let people hold signed attestations and present them selectively, reducing reliance on centralized identity providers for some use cases.",
-   "whyItMatters": "Reusable, cryptographically verifiable credentials could simplify onboarding and proofing and improve privacy through selective disclosure. Ecosystem trust frameworks, wallet interoperability and issuer adoption are still maturing.",
+   "whyItMatters": "Reusable, cryptographically verifiable credentials could simplify onboarding and proofing and improve privacy through selective disclosure. Ecosystem trust frameworks, wallet interoperability and issuer adoption are still maturing. The FIDO Alliance is developing a digital identity wallet certification program, and the W3C Verifiable Credentials Working Group is drafting threat models and a revocation status mechanism (Bitstring Status List v1.1).",
    "risks": [
     "Interoperability between credential formats and wallets",
     "Unclear trust frameworks and issuer accreditation",
@@ -580,11 +605,51 @@ window.IAM_DATA = {
      "type": "government",
      "published": "2024-04",
      "accessed": "2026-11-04"
+    },
+    {
+     "title": "Biometric Update: FIDO sets out certification framework for digital identity wallets",
+     "publisher": "FIDO Alliance",
+     "url": "https://fidoalliance.org/biometric-update-fido-sets-out-certification-framework-for-digital-identity-wallets/",
+     "type": "news",
+     "published": "2026-10-21",
+     "accessed": "2026-11-05"
+    },
+    {
+     "title": "FIDO Alliance Moves to Accelerate Digital Credentials Adoption at Scale",
+     "publisher": "FIDO Alliance",
+     "url": "https://fidoalliance.org/fido-alliance-moves-to-accelerate-digital-credentials-adoption-at-scale/",
+     "type": "news",
+     "published": "2026-10-20",
+     "accessed": "2026-11-05"
+    },
+    {
+     "title": "First Draft Notes: Verifiable Credential Threat Models",
+     "publisher": "W3C News",
+     "url": "https://www.w3.org/news/2026/first-draft-notes-verifiable-credential-threat-models/",
+     "type": "standard",
+     "published": "2026-10-08",
+     "accessed": "2026-11-05"
+    },
+    {
+     "title": "Group Note Draft: Verifiable Credentials Data Model Threat Model v2.1",
+     "publisher": "W3C News",
+     "url": "https://www.w3.org/news/2026/group-note-draft-verifiable-credentials-data-model-threat-model-v2-1/",
+     "type": "standard",
+     "published": "2026-09-24",
+     "accessed": "2026-11-05"
+    },
+    {
+     "title": "First Public Working Draft: Bitstring Status List v1.1",
+     "publisher": "W3C News",
+     "url": "https://www.w3.org/news/2026/first-public-working-draft-bitstring-status-list-v1-1/",
+     "type": "standard",
+     "published": "2026-09-24",
+     "accessed": "2026-11-05"
     }
    ],
-   "needsVerification": false,
-   "lastUpdated": "2026-11-04",
-   "verificationNotes": ""
+   "needsVerification": true,
+   "lastUpdated": "2026-11-05",
+   "verificationNotes": "Drafted by the automated weekly update on 2026-11-05 from https://fidoalliance.org/biometric-update-fido-sets-out-certification-framework-for-digital-identity-wallets/, https://fidoalliance.org/fido-alliance-moves-to-accelerate-digital-credentials-adoption-at-scale/, https://www.w3.org/news/2026/first-draft-notes-verifiable-credential-threat-models/, https://www.w3.org/news/2026/group-note-draft-verifiable-credentials-data-model-threat-model-v2-1/, https://www.w3.org/news/2026/first-public-working-draft-bitstring-status-list-v1-1/. Not yet confirmed by a reviewer."
   },
   {
    "id": "ai-agent-identity",
@@ -596,11 +661,12 @@ window.IAM_DATA = {
    "impact": "high",
    "momentum": "rising",
    "summary": "AI agents act on behalf of users and call tools and APIs, raising new questions about how to identify, authenticate, authorize, delegate to and audit autonomous software actors.",
-   "whyItMatters": "Agents can chain actions across systems using delegated credentials, which strains models built for human sessions and static service accounts. Scoped, short-lived, auditable delegation is an active area of standards and product work.",
+   "whyItMatters": "Agents can chain actions across systems using delegated credentials, which strains models built for human sessions and static service accounts. The OpenID Foundation has published a threat model for agents that cross security boundaries, and agent-initiated payments raise the question of what the user has authorized the agent to do. Scoped, short-lived, auditable delegation is an active area of standards and product work.",
    "risks": [
     "Over-broad delegated tokens give an agent more access than the task needs",
     "Prompt injection can turn legitimate agent access into misuse",
     "Weak attribution of agent actions in audit logs",
+    "Agents crossing security boundaries between providers or organizations",
     "Standards and protocols are still changing"
    ],
    "keyStandards": [
@@ -651,11 +717,27 @@ window.IAM_DATA = {
      "type": "vendor",
      "published": "2026-07",
      "accessed": "2026-11-04"
+    },
+    {
+     "title": "OIDF publishes threat model for cross-boundary AI agents",
+     "publisher": "OpenID Foundation",
+     "url": "https://openid.net/oidf-publishes-threat-model-for-cross-boundary-ai-agents/",
+     "type": "news",
+     "published": "2026-10-12",
+     "accessed": "2026-11-05"
+    },
+    {
+     "title": "OIDF responds to EMVCo Agentic Payments framework draft",
+     "publisher": "OpenID Foundation",
+     "url": "https://openid.net/oidf-responds-to-emvco-agentic-payments-framework-draft/",
+     "type": "news",
+     "published": "2026-10-08",
+     "accessed": "2026-11-05"
     }
    ],
-   "needsVerification": false,
-   "verificationNotes": "",
-   "lastUpdated": "2026-11-04"
+   "needsVerification": true,
+   "verificationNotes": "Drafted by the automated weekly update on 2026-11-05 from https://openid.net/oidf-publishes-threat-model-for-cross-boundary-ai-agents/, https://openid.net/oidf-responds-to-emvco-agentic-payments-framework-draft/. Not yet confirmed by a reviewer.",
+   "lastUpdated": "2026-11-05"
   },
   {
    "id": "identity-regulation",
@@ -759,6 +841,7 @@ window.IAM_DATA = {
    "steps": [
     "Map current reset and recovery flows and their weaknesses",
     "Define identity re-proofing requirements by risk level",
+    "Avoid knowledge-based questions as a recovery factor, since the personal data they rely on can be exposed in breaches",
     "Add approval and notification steps for high-risk recovery",
     "Run a tabletop test of a lost-device scenario"
    ],
@@ -773,7 +856,7 @@ window.IAM_DATA = {
     "iam-architect",
     "ciso"
    ],
-   "lastUpdated": "2026-11-04"
+   "lastUpdated": "2026-11-05"
   },
   {
    "id": "rec-zt-baseline-assessment",
