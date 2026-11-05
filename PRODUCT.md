@@ -20,7 +20,7 @@ Trends are tied to recommendations: each trend links to specific, ranked actions
 
 ## Operating Context
 
-A visitor scans the maturity-by-impact landscape or filters trends, opens a trend to read why it matters, its risks, key standards and sources, and works through the linked recommendations in the Playbook. They can keep a watchlist and export it as Markdown to share in a briefing. A Latest page lists headlines from official sources (FIDO Alliance, OpenID Foundation, NIST, CISA, W3C), refreshed on a schedule. The site is public, hosted on GitHub Pages, and republished every six hours.
+A visitor scans the maturity-by-impact landscape or filters trends, opens a trend to read why it matters, its risks, key standards and sources, and works through the linked recommendations in the Playbook. They can keep a watchlist and export it as Markdown to share in a briefing. A Latest page lists headlines from official sources (FIDO Alliance, OpenID Foundation, NIST, CISA, W3C), refreshed on a schedule. The site is public, hosted on GitHub Pages, and republished every six hours. Dashboard and trend pages show headline counts matched to each trend from that feed; curated content is updated through a weekly, human-reviewed pull request.
 
 ## Capabilities and Constraints
 

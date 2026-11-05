@@ -83,6 +83,12 @@ export function watchButton(id, watched, title) {
   return `<button type="button" class="btn btn-watch" data-watch="${esc(id)}" aria-pressed="${watched ? 'true' : 'false'}" aria-label="Watch ${esc(title)}">${icon('star')}<span>${watched ? 'Watching' : 'Watch'}</span></button>`;
 }
 
+/** " · 3 headlines (30 days)" for the end of a trend row's category line, or '' when there is no signal. */
+export function signalNote(sig) {
+  if (!sig || !(sig.count30 > 0)) return '';
+  return `<span class="c-sig"> &middot; ${sig.count30} headline${sig.count30 === 1 ? '' : 's'} (30 days)</span>`;
+}
+
 /** One register row for a trend (dashboard and watchlist). ctx: { taxonomy, isWatched(id), isStale(date) }. */
 export function trendRow(t, ctx, selected) {
   const tx = ctx.taxonomy;
@@ -91,7 +97,7 @@ export function trendRow(t, ctx, selected) {
   const n = (t.sources || []).length;
   return `<tr class="trow" data-trend="${esc(t.id)}"${selected ? ' data-selected="true"' : ''}>
   <td class="c-status"><span class="mark" aria-hidden="true">${ladder(t.maturity, tx)}</span><span class="vh">Maturity: </span><span class="c-label">${esc(labelOf(tx.maturity, t.maturity))}</span></td>
-  <td class="c-trend"><a href="#/trend/${encodeURIComponent(t.id)}">${esc(t.title)}</a>${flag}<span class="c-cat">${esc(cats)}<span class="c-src"> &middot; ${n} source${n === 1 ? '' : 's'}</span></span></td>
+  <td class="c-trend"><a href="#/trend/${encodeURIComponent(t.id)}">${esc(t.title)}</a>${flag}<span class="c-cat">${esc(cats)}<span class="c-src"> &middot; ${n} source${n === 1 ? '' : 's'}</span>${signalNote(ctx.signal && ctx.signal(t.id))}</span></td>
   <td class="c-impact">${valueMark('impact', t.impact, tx)}</td>
   <td class="c-mom">${valueMark('momentum', t.momentum, tx)}</td>
   <td class="c-rev"><time datetime="${esc(t.lastUpdated)}">${esc(t.lastUpdated)}</time>${ctx.isStale(t.lastUpdated) ? ' <span class="badge badge-warn">May be stale</span>' : ''}</td>

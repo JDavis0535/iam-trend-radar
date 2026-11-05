@@ -1,0 +1,182 @@
+{
+ "schemaVersion": 1,
+ "generatedAt": "2026-11-04T16:34:08.883Z",
+ "trends": {
+  "passkeys-passwordless": {
+   "count30": 16,
+   "count90": 19,
+   "lastSignal": "2026-10-30T12:41:03.000Z",
+   "items": [
+    {
+     "id": "f708m2",
+     "title": "ITBrief: HID joins FIDO Alliance board as passkeys gain traction",
+     "link": "https://fidoalliance.org/itbrief-hid-joins-fido-alliance-board-as-passkeys-gain-traction/",
+     "source": "FIDO Alliance",
+     "published": "2026-10-30T12:41:03.000Z"
+    },
+    {
+     "id": "16mek9y",
+     "title": "MobileIDWorld: Amazon Says More Than 500 Million Customers Have Enabled Passkeys",
+     "link": "https://fidoalliance.org/mobileidworld-amazon-says-more-than-500-million-customers-have-enabled-passkeys/",
+     "source": "FIDO Alliance",
+     "published": "2026-10-30T12:38:28.000Z"
+    },
+    {
+     "id": "1uf28uv",
+     "title": "FinXTech: The Banking Industry Warms to Passkeys",
+     "link": "https://fidoalliance.org/finxtech-the-banking-industry-warms-to-passkeys/",
+     "source": "FIDO Alliance",
+     "published": "2026-10-30T12:36:25.000Z"
+    },
+    {
+     "id": "t0q2yr",
+     "title": "Biometric Update: FIDO Alliance counts 7 billion passkeys as adoption gains momentum",
+     "link": "https://fidoalliance.org/biometric-update-fido-alliance-counts-7-billion-passkeys-as-adoption-gains-momentum/",
+     "source": "FIDO Alliance",
+     "published": "2026-10-30T12:33:56.000Z"
+    },
+    {
+     "id": "1qr6mdk",
+     "title": "Biometric Update: FIDO sets out certification framework for digital identity wallets",
+     "link": "https://fidoalliance.org/biometric-update-fido-sets-out-certification-framework-for-digital-identity-wallets/",
+     "source": "FIDO Alliance",
+     "published": "2026-10-21T19:22:13.000Z"
+    }
+   ]
+  },
+  "zero-trust-identity": {
+   "count30": 0,
+   "count90": 0,
+   "lastSignal": null,
+   "items": []
+  },
+  "itdr": {
+   "count30": 0,
+   "count90": 0,
+   "lastSignal": null,
+   "items": []
+  },
+  "non-human-identity": {
+   "count30": 1,
+   "count90": 1,
+   "lastSignal": "2026-10-20T15:00:25.000Z",
+   "items": [
+    {
+     "id": "1pgustd",
+     "title": "Defakto joins the OIDF as a Sustaining Corporate Member",
+     "link": "https://openid.net/defakto-joins-the-oidf-as-a-sustaining-corporate-member/",
+     "source": "OpenID Foundation",
+     "published": "2026-10-20T15:00:25.000Z"
+    }
+   ]
+  },
+  "iga-modernization": {
+   "count30": 0,
+   "count90": 0,
+   "lastSignal": null,
+   "items": []
+  },
+  "pam-just-in-time": {
+   "count30": 0,
+   "count90": 0,
+   "lastSignal": null,
+   "items": []
+  },
+  "ciem-cloud-entitlements": {
+   "count30": 0,
+   "count90": 0,
+   "lastSignal": null,
+   "items": []
+  },
+  "decentralized-identity-wallets": {
+   "count30": 3,
+   "count90": 5,
+   "lastSignal": "2026-10-21T19:22:13.000Z",
+   "items": [
+    {
+     "id": "1qr6mdk",
+     "title": "Biometric Update: FIDO sets out certification framework for digital identity wallets",
+     "link": "https://fidoalliance.org/biometric-update-fido-sets-out-certification-framework-for-digital-identity-wallets/",
+     "source": "FIDO Alliance",
+     "published": "2026-10-21T19:22:13.000Z"
+    },
+    {
+     "id": "1s4fdrg",
+     "title": "First Draft Notes: Verifiable Credential Threat Models",
+     "link": "https://www.w3.org/news/2026/first-draft-notes-verifiable-credential-threat-models/",
+     "source": "W3C News",
+     "published": "2026-10-08T08:32:00.000Z"
+    },
+    {
+     "id": "jcgv76",
+     "title": "W3C issues press release about developing Verifiable Credential Barcodes",
+     "link": "https://www.w3.org/news/2026/w3c-issues-press-release-about-developing-verifiable-credential-barcodes/",
+     "source": "W3C News",
+     "published": "2026-10-07T17:50:00.000Z"
+    },
+    {
+     "id": "14nxllt",
+     "title": "First Public Working Draft: Bitstring Status List v1.1",
+     "link": "https://www.w3.org/news/2026/first-public-working-draft-bitstring-status-list-v1-1/",
+     "source": "W3C News",
+     "published": "2026-09-24T08:28:00.000Z"
+    },
+    {
+     "id": "1gioqgg",
+     "title": "Group Note Draft: Verifiable Credentials Data Model Threat Model v2.1",
+     "link": "https://www.w3.org/news/2026/group-note-draft-verifiable-credentials-data-model-threat-model-v2-1/",
+     "source": "W3C News",
+     "published": "2026-09-24T08:12:00.000Z"
+    }
+   ]
+  },
+  "ai-agent-identity": {
+   "count30": 3,
+   "count90": 8,
+   "lastSignal": "2026-10-21T15:25:47.000Z",
+   "items": [
+    {
+     "id": "16jf8vt",
+     "title": "Authenticate 2026 Day 3: Trusting the transaction in the agentic economy",
+     "link": "https://fidoalliance.org/authenticate-2026-day-3-trusting-the-transaction-in-the-agentic-economy/",
+     "source": "FIDO Alliance",
+     "published": "2026-10-21T15:25:47.000Z"
+    },
+    {
+     "id": "1m650ex",
+     "title": "OIDF publishes threat model for cross-boundary AI agents",
+     "link": "https://openid.net/oidf-publishes-threat-model-for-cross-boundary-ai-agents/",
+     "source": "OpenID Foundation",
+     "published": "2026-10-12T18:40:48.000Z"
+    },
+    {
+     "id": "1qyt1jx",
+     "title": "OIDF responds to EMVCo Agentic Payments framework draft",
+     "link": "https://openid.net/oidf-responds-to-emvco-agentic-payments-framework-draft/",
+     "source": "OpenID Foundation",
+     "published": "2026-10-08T20:55:45.000Z"
+    },
+    {
+     "id": "kspnae",
+     "title": "ID Tech: IDEMIA Adds Passkeys and Restricted-Use Tokens for AI-Agent Payments",
+     "link": "https://fidoalliance.org/id-tech-idemia-adds-passkeys-and-restricted-use-tokens-for-ai-agent-payments/",
+     "source": "FIDO Alliance",
+     "published": "2026-10-05T15:36:08.000Z"
+    },
+    {
+     "id": "x8dzmt",
+     "title": "ID Tech: Thales Brings Agent Access Controls to Google Cloud Gemini Enterprise",
+     "link": "https://fidoalliance.org/id-tech-thales-brings-agent-access-controls-to-google-cloud-gemini-enterprise/",
+     "source": "FIDO Alliance",
+     "published": "2026-10-05T15:34:23.000Z"
+    }
+   ]
+  },
+  "identity-regulation": {
+   "count30": 0,
+   "count90": 0,
+   "lastSignal": null,
+   "items": []
+  }
+ }
+}

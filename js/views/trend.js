@@ -5,6 +5,19 @@ import { state, makeCtx } from '../store.js';
 import { sortRecs } from '../filters.js';
 import { esc, safeUrl, icon, valueMark, categoryChips, verificationBadge, watchButton, recTable, labelOf } from '../ui.js';
 
+/** "In the news": keyword-matched headlines from the official feeds. Empty string when there are none. */
+function newsSection(sig) {
+  if (!sig || !sig.items.length) return '';
+  const rows = sig.items.map((i) => {
+    const url = safeUrl(i.link);
+    const title = url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(i.title)}<span class="vh"> (opens in a new tab)</span></a>` : esc(i.title);
+    const when = typeof i.published === 'string' ? i.published.slice(0, 10) : '';
+    return `<li>${title}<br><span class="small muted">${esc(i.source || '')}${when ? ` &middot; <time datetime="${esc(when)}">${esc(when)}</time>` : ''}</span></li>`;
+  }).join('');
+  return `<section aria-labelledby="h-news"><h2 id="h-news">In the news</h2><ul class="sources">${rows}</ul>
+      <p class="small muted">Matched to this trend by keyword from official feeds. These links are not reviewed and do not change the assessment above.</p></section>`;
+}
+
 function sourceItem(s) {
   const url = safeUrl(s.url);
   const title = url
@@ -45,6 +58,7 @@ ${verification}
     <section aria-labelledby="h-summary"><h2 id="h-summary">Summary</h2><p class="lead-text">${esc(t.summary)}</p></section>
     <section aria-labelledby="h-why"><h2 id="h-why">Why it matters</h2><p>${esc(t.whyItMatters)}</p></section>
     <section aria-labelledby="h-risks"><h2 id="h-risks">Risks and challenges</h2>${list(t.risks)}</section>
+    ${newsSection(ctx.signal(t.id))}
     <section aria-labelledby="h-recs"><h2 id="h-recs">Recommendations</h2>
       ${recs.length ? recTable(recs, ctx, 'Recommendations for this trend') : '<p class="muted">None listed.</p>'}</section>
     <section aria-labelledby="h-rel"><h2 id="h-rel">Related trends</h2>${related.length

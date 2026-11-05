@@ -1,0 +1,71 @@
+# Weekly: asks Claude to propose edits to the curated trends and recommendations from the recent feed, and opens a
+# pull request with them. Nothing is published until a person merges the PR; the Pages workflow then deploys it.
+# Needs the repository secret ANTHROPIC_API_KEY, and Settings > Actions > General > "Allow GitHub Actions to create
+# and approve pull requests". Without the secret the run does nothing and succeeds.
+name: Propose content updates
+
+on:
+  schedule:
+    - cron: '41 7 * * 1'   # Mondays 07:41 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: propose-updates
+  cancel-in-progress: false
+
+jobs:
+  propose:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Look for an open proposal PR
+        id: open
+        run: echo "count=$(gh pr list --label auto-content --state open --json number --jq length)" >> "$GITHUB_OUTPUT"
+
+      - name: Refresh feed and signals
+        if: steps.open.outputs.count == '0'
+        run: |
+          node scripts/fetch-feed.mjs
+          node scripts/build-signals.mjs
+
+      - name: Install the proposal job's dependencies
+        if: steps.open.outputs.count == '0'
+        run: npm ci --prefix scripts/propose
+
+      - name: Ask Claude for proposals (guard rails decide what is applied)
+        id: propose
+        if: steps.open.outputs.count == '0'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/propose/propose-updates.mjs --body-file "$RUNNER_TEMP/pr-body.md"
+
+      - name: Rebuild generated files and run tests
+        if: steps.propose.outputs.applied != '' && steps.propose.outputs.applied != '0'
+        run: |
+          node scripts/build-data.mjs
+          node --test
+
+      - name: Open the pull request
+        if: steps.propose.outputs.applied != '' && steps.propose.outputs.applied != '0'
+        run: |
+          branch="auto/content-update-$(date -u +%Y%m%d)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          # Only curated content and its generated bundles. The refreshed feed and signals are never committed.
+          git add data/trends.json data/recommendations.json data/meta.json data/data.js dist/app.js
+          git commit -m "Weekly content update proposed from the feed (needs review)"
+          git push origin "$branch"
+          gh label create auto-content --color 5319e7 --description "Automated content proposal" 2>/dev/null || true
+          gh pr create --base main --head "$branch" --label auto-content \
+            --title "Weekly content update (needs review)" --body-file "$RUNNER_TEMP/pr-body.md"

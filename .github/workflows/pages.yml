@@ -1,5 +1,6 @@
 # Builds and publishes the site to GitHub Pages, and refreshes data/feed.json from the official RSS/Atom
-# feeds on a schedule. The refreshed feed is deployed but not committed, so the repo history stays clean.
+# feeds on a schedule, then derives data/signals.json (headline counts per trend) from it. The refreshed feed and
+# signals are deployed but not committed, so the repo history stays clean.
 name: Publish site
 
 on:
@@ -31,6 +32,8 @@ jobs:
           node-version: '22'
       - name: Refresh feed (a failing source keeps its previous items)
         run: node scripts/fetch-feed.mjs
+      - name: Match feed items to trends (headline signals)
+        run: node scripts/build-signals.mjs
       - name: Validate data and rebuild bundles
         run: node scripts/build-data.mjs
       - name: Run tests

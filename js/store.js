@@ -13,6 +13,8 @@ export const state = {
   recommendations: [],
   trendMap: new Map(),
   recMap: new Map(),
+  signals: new Map(), // trendId -> { count30, count90, lastSignal, items[] } from data/signals.json (empty if unavailable)
+  signalsAt: '',
   watch: new Set(),
   filters: defaultFilters(),
   recFilters: defaultRecFilters(),
@@ -54,6 +56,44 @@ export async function loadData() {
   state.recMap = new Map(raw.recommendations.map((r) => [r.id, r]));
   loadWatchlist();
   loadFilters();
+}
+
+export const SIGNALS_MAX_AGE_DAYS = 14;
+
+/** Pure: validates a parsed signals.json against the known trend ids. Returns a Map, or null if unusable or too old. */
+export function parseSignals(raw, trendIds, now = Date.now()) {
+  if (!raw || typeof raw !== 'object' || !raw.trends || typeof raw.trends !== 'object') return null;
+  const at = Date.parse(raw.generatedAt);
+  if (Number.isNaN(at) || now - at > SIGNALS_MAX_AGE_DAYS * 86400000) return null;
+  const out = new Map();
+  for (const id of trendIds) {
+    const s = raw.trends[id];
+    if (!s || !Number.isFinite(s.count30) || !Number.isFinite(s.count90) || !Array.isArray(s.items)) continue;
+    const items = s.items.filter((i) => i && typeof i.title === 'string' && typeof i.link === 'string').slice(0, 5);
+    out.set(id, { count30: s.count30, count90: s.count90, lastSignal: typeof s.lastSignal === 'string' ? s.lastSignal : null, items });
+  }
+  return out;
+}
+
+/**
+ * Loads the derived headline signals (data/signals.json, rebuilt by the scheduled workflow). Optional: it needs
+ * http(s), is ignored when missing or older than SIGNALS_MAX_AGE_DAYS, never throws, and gives up after timeoutMs
+ * so a slow request can never block the first render. Returns true when signals were loaded.
+ */
+export async function loadSignals(timeoutMs = 3000) {
+  state.signals = new Map();
+  state.signalsAt = '';
+  try {
+    if (globalThis.location && globalThis.location.protocol === 'file:') return false;
+    const res = await fetch('data/signals.json', { cache: 'no-cache', signal: AbortSignal.timeout(timeoutMs) });
+    if (!res.ok) return false;
+    const raw = await res.json();
+    const map = parseSignals(raw, [...state.trendMap.keys()]);
+    if (!map) return false;
+    state.signals = map;
+    state.signalsAt = raw.generatedAt;
+    return true;
+  } catch { return false; }
 }
 
 function loadWatchlist() {
@@ -117,6 +157,7 @@ export function makeCtx() {
     isWatched,
     isStale: (d) => isStale(d),
     trendById: (id) => state.trendMap.get(id),
+    signal: (id) => state.signals.get(id) || null,
     recById: (id) => state.recMap.get(id),
     score: priorityScore
   };
