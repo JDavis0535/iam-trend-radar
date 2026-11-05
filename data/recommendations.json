@@ -30,13 +30,14 @@
     "steps": [
       "Map current reset and recovery flows and their weaknesses",
       "Define identity re-proofing requirements by risk level",
+      "Avoid knowledge-based questions as a recovery factor, since the underlying personal data can be exposed in breaches",
       "Add approval and notification steps for high-risk recovery",
       "Run a tabletop test of a lost-device scenario"
     ],
     "successMetrics": ["Recovery flow documented and tested", "Recovery events are logged and reviewable"],
     "dependencies": ["rec-passkey-pilot-workforce"],
     "audience": ["iam-architect", "ciso"],
-    "lastUpdated": "2026-11-04"
+    "lastUpdated": "2026-11-05"
   },
   {
     "id": "rec-zt-baseline-assessment",
