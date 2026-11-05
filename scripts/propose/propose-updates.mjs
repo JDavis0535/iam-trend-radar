@@ -39,7 +39,10 @@ export async function askModel(client, { data, feedItems, signals, today, model 
     message = await run({ format: { type: 'json_schema', schema: responseSchema(data.taxonomy) } });
   } catch (e) {
     // The structured-output schema was rejected: retry once with the prompt alone. Output is validated either way.
-    if (e && e.status === 400) message = await run({});
+    if (e && e.status === 400) {
+      console.warn(`WARN structured-output schema rejected (${String(e.message || e).slice(0, 300)}); retrying without it`);
+      message = await run({});
+    }
     else throw e;
   }
   const text = message.content.filter((b) => b.type === 'text').map((b) => b.text).join('');

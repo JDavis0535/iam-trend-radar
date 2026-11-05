@@ -73,7 +73,9 @@ Rules:
 - Keep the style of the existing text: plain, neutral, no marketing language. Summaries are at most 280 characters, "whyItMatters" at most 500, recommendation descriptions at most 400. Recommendation "steps" has 3 to 5 items.
 - Do not add numbers, percentages, dollar amounts or statistics unless a cited feed item states them, and then attribute them in the sentence.
 - "rationale" is one or two sentences for the human reviewer explaining what in the evidence justifies the edit.
-- Reply with JSON only, matching the schema.`;
+- Reply with JSON only: no prose and no code fence. Use exactly this shape, with these exact key names:
+{"proposals": [{"kind": "trend" or "recommendation", "id": "<existing id>", "changes": {<only the fields you are changing>}, "evidence": ["<feed item id>", ...], "rationale": "<one or two sentences>"}]}
+  Editable fields on a trend: momentum, maturity, summary, whyItMatters, risks, keyStandards. Editable fields on a recommendation: horizon, effort, impact, description, steps, successMetrics. Do not include any other field (never title, id or sources). In "changes" you may omit a field or set it to null to leave it unchanged; list and text fields replace the whole current value.`;
 
 /** Builds the user message: the current content (compact), the recent feed, and the keyword signals. */
 export function buildUserPrompt({ trends, recommendations, feedItems, signals, today }) {
