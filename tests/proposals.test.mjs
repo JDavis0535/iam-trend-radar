@@ -5,7 +5,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { validateDataset, loadDataDir } from '../scripts/validate-data.mjs';
 import { applyProposals, parseReply, responseSchema, buildUserPrompt, renderPrBody, formatCompact, MAX_APPLIED, ALL_FIELDS } from '../scripts/propose/proposals-lib.mjs';
-import { propose, askModel } from '../scripts/propose/propose-updates.mjs';
+import { propose, askModel, verifyApplied } from '../scripts/propose/propose-updates.mjs';
+import { buildVerifyPrompt, parseVerdicts, decideAutoMerge, verifySchema, editKey } from '../scripts/propose/verify-lib.mjs';
 
 const data = loadDataDir(new URL('../data', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1'));
 const TODAY = '2026-11-10';
@@ -98,7 +99,7 @@ test('a trend that is already flagged keeps its earlier verification note', () =
   const t = trend(d, 'passkeys-passwordless');
   t.needsVerification = true; t.verificationNotes = 'Earlier note.';
   const r = applyProposals(d, [prop()], feedItems, { today: TODAY });
-  assert.match(trend(r.data, 'passkeys-passwordless').verificationNotes, /^Earlier note\. Drafted by/);
+  assert.match(trend(r.data, 'passkeys-passwordless').verificationNotes, /^Earlier note\. Automated update on/);
 });
 
 test('parseReply accepts plain or fenced JSON and rejects everything else', () => {
@@ -192,4 +193,76 @@ test('propose: refusal, garbage reply and stale or empty feed all end as a no-op
 test('askModel rethrows non-400 errors', async () => {
   const client = { beta: { messages: { stream: () => ({ finalMessage: async () => { const e = new Error('boom'); e.status = 500; throw e; } }) } } };
   await assert.rejects(askModel(client, { data, feedItems, signals: {}, today: TODAY }), /boom/);
+});
+
+// ---- automated verification (decides whether a PR may merge without a person) ----
+const applyOne = (over) => applyProposals(data, [prop(over)], feedItems, { today: TODAY }).applied;
+const verdictsFor = (applied, supported, problems = []) => new Map(applied.map((a) => [editKey(a), { supported, problems }]));
+
+test('the verify prompt carries the edit and its evidence but never the proposer rationale', () => {
+  const applied = applyOne();
+  const p = buildVerifyPrompt(applied);
+  assert.match(p, /A tighter summary of passkeys\./);
+  assert.match(p, /FIDO publishes a passkey profile/);
+  assert.ok(!p.includes('FIDO published a profile.'), 'rationale must not leak to the verifier');
+  assert.match(p, /trend:passkeys-passwordless/);
+});
+
+test('verifySchema uses plain types only (the API rejects type arrays next to enum)', () => {
+  assert.ok(!JSON.stringify(verifySchema()).includes('"type":["'));
+});
+
+test('parseVerdicts accepts plain or fenced JSON and drops malformed verdicts', () => {
+  const m = parseVerdicts('```json\n{"verdicts":[{"key":"trend:a","supported":true,"problems":[]},{"key":"trend:b","supported":"yes"},null]}\n```');
+  assert.equal(m.size, 1);
+  assert.deepEqual(m.get('trend:a'), { supported: true, problems: [] });
+  assert.equal(parseVerdicts('nope'), null);
+  assert.equal(parseVerdicts('{"verdicts":1}'), null);
+});
+
+test('decideAutoMerge: merges only when every edit is supported and none touches maturity or momentum', () => {
+  const applied = applyOne();
+  assert.deepEqual(decideAutoMerge(applied, verdictsFor(applied, true)), { autoMerge: true, reasons: [] });
+  const bad = decideAutoMerge(applied, verdictsFor(applied, false, ['adds a number']));
+  assert.equal(bad.autoMerge, false);
+  assert.match(bad.reasons[0], /not supported by its evidence: adds a number/);
+  assert.match(decideAutoMerge(applied, new Map()).reasons[0], /no verdict/);
+  assert.match(decideAutoMerge(applied, null).reasons[0], /did not produce a usable answer/);
+  assert.match(decideAutoMerge([], new Map()).reasons[0], /no edits/);
+  const mom = applyOne({ changes: { ...none, momentum: trend(data, 'passkeys-passwordless').momentum === 'rising' ? 'steady' : 'rising' } });
+  const r = decideAutoMerge(mom, verdictsFor(mom, true));
+  assert.equal(r.autoMerge, false);
+  assert.match(r.reasons[0], /momentum, which always needs a person/);
+});
+
+test('one unsupported edit among several blocks the whole batch', () => {
+  const applied = applyProposals(data, [prop(), prop({ id: 'zero-trust-identity', changes: { ...none, summary: 'A fresh zero trust summary.' } })], feedItems, { today: TODAY }).applied;
+  const v = verdictsFor(applied, true);
+  v.set(editKey(applied[1]), { supported: false, problems: ['x'] });
+  assert.equal(decideAutoMerge(applied, v).autoMerge, false);
+});
+
+function verifierStub(text, { stop = 'end_turn', fail = null } = {}) {
+  return { beta: { messages: { stream: () => ({ finalMessage: async () => { if (fail) throw fail; return { stop_reason: stop, content: [{ type: 'text', text }], usage: {} }; } }) } } };
+}
+
+test('verifyApplied: supported edits pass; unsupported, refused, garbage and API errors never auto-merge and never throw', async () => {
+  const applied = applyOne();
+  const ok = JSON.stringify({ verdicts: [{ key: editKey(applied[0]), supported: true, problems: [] }] });
+  assert.equal((await verifyApplied(verifierStub(ok), applied)).autoMerge, true);
+  const no = JSON.stringify({ verdicts: [{ key: editKey(applied[0]), supported: false, problems: ['unsupported number'] }] });
+  assert.equal((await verifyApplied(verifierStub(no), applied)).autoMerge, false);
+  assert.match((await verifyApplied(verifierStub('', { stop: 'refusal' }), applied)).reasons[0], /declined/);
+  assert.equal((await verifyApplied(verifierStub('not json'), applied)).autoMerge, false);
+  const err = new Error('boom'); err.status = 500;
+  assert.match((await verifyApplied(verifierStub('', { fail: err }), applied)).reasons[0], /failed \(boom\)/);
+});
+
+test('PR body states whether the automated check passed', () => {
+  const applied = applyOne();
+  const pass = renderPrBody({ applied, rejected: [], today: TODAY, model: 'm', verification: { autoMerge: true, reasons: [] } });
+  assert.match(pass, /Automated check passed/);
+  const fail = renderPrBody({ applied, rejected: [], today: TODAY, model: 'm', verification: { autoMerge: false, reasons: ['trend:x was not supported'] } });
+  assert.ok(fail.includes('**Not merged automatically.** trend:x was not supported.'));
+  assert.match(fail, /Nothing here is published until you merge/);
 });

@@ -13,20 +13,25 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadDataDir } from '../validate-data.mjs';
 import { responseSchema, SYSTEM_PROMPT, buildUserPrompt, parseReply, applyProposals, renderPrBody, formatCompact } from './proposals-lib.mjs';
+import { VERIFY_SYSTEM, verifySchema, buildVerifyPrompt, parseVerdicts, decideAutoMerge } from './verify-lib.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const MODEL = process.env.IAM_PROPOSE_MODEL || 'claude-opus-5-5';
 const FEED_MAX_AGE_HOURS = 72; // do not propose edits from a feed that has stopped refreshing
 const FEED_WINDOW_DAYS = 120;
 
-/** Calls the model and returns { text, stopReason }. `client` is injectable so tests never touch the network. */
-export async function askModel(client, { data, feedItems, signals, today, model = MODEL }) {
+/**
+ * One streamed model call that asks for JSON. Tries the structured-output schema first and, if the API rejects it with
+ * a 400, retries once with the prompt alone (callers validate the reply either way). `client` is injectable so tests
+ * never touch the network. Returns { text, stopReason, usage }.
+ */
+export async function askJson(client, { model, system, user, schema, maxTokens }) {
   const params = {
     model,
-    max_tokens: 32000,
+    max_tokens: maxTokens,
     thinking: { type: 'adaptive' },
-    system: SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: buildUserPrompt({ trends: data.trends, recommendations: data.recommendations, feedItems, signals, today }) }],
+    system,
+    messages: [{ role: 'user', content: user }],
     betas: ['server-side-fallback-2026-07-01'],
     fallbacks: 'default'
   };
@@ -36,17 +41,38 @@ export async function askModel(client, { data, feedItems, signals, today, model 
   };
   let message;
   try {
-    message = await run({ format: { type: 'json_schema', schema: responseSchema(data.taxonomy) } });
+    message = await run({ format: { type: 'json_schema', schema } });
   } catch (e) {
     // The structured-output schema was rejected: retry once with the prompt alone. Output is validated either way.
     if (e && e.status === 400) {
       console.warn(`WARN structured-output schema rejected (${String(e.message || e).slice(0, 300)}); retrying without it`);
       message = await run({});
-    }
-    else throw e;
+    } else throw e;
   }
   const text = message.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
   return { text, stopReason: message.stop_reason, usage: message.usage };
+}
+
+/** Asks the proposing model for edits. */
+export function askModel(client, { data, feedItems, signals, today, model = MODEL }) {
+  const user = buildUserPrompt({ trends: data.trends, recommendations: data.recommendations, feedItems, signals, today });
+  return askJson(client, { model, system: SYSTEM_PROMPT, user, schema: responseSchema(data.taxonomy), maxTokens: 32000 });
+}
+
+export const VERIFY_MODEL = process.env.IAM_VERIFY_MODEL || MODEL;
+
+/**
+ * Independent second call: does each applied edit follow from its cited headlines? Any failure (API error, refusal,
+ * unreadable reply) means "do not auto-merge"; this never throws. Returns { autoMerge, reasons }.
+ */
+export async function verifyApplied(client, applied, { model = VERIFY_MODEL } = {}) {
+  try {
+    const { text, stopReason } = await askJson(client, { model, system: VERIFY_SYSTEM, user: buildVerifyPrompt(applied), schema: verifySchema(), maxTokens: 16000 });
+    if (stopReason === 'refusal') return { autoMerge: false, reasons: ['the automated check declined the request'] };
+    return decideAutoMerge(applied, parseVerdicts(text));
+  } catch (e) {
+    return { autoMerge: false, reasons: [`the automated check failed (${String(e && e.message ? e.message : e).slice(0, 120)})`] };
+  }
 }
 
 /** Returns { data, applied, rejected, note } without touching the disk. note is set when nothing was attempted. */
@@ -91,7 +117,8 @@ async function main() {
   }
 
   const { default: Anthropic } = await import('@anthropic-ai/sdk');
-  const result = await propose({ client: new Anthropic(), data, feed, signals, today });
+  const client = new Anthropic();
+  const result = await propose({ client, data, feed, signals, today });
   if (result.note) { console.log(result.note); return; }
 
   for (const r of result.rejected) console.log(`rejected ${r.label}: ${r.reason}`);
@@ -102,12 +129,20 @@ async function main() {
     return;
   }
 
+  // IAM_AUTOMERGE=false is the kill switch: edits are still checked and proposed, but always wait for a person.
+  const verification = await verifyApplied(client, result.applied);
+  if (process.env.IAM_AUTOMERGE === 'false' && verification.autoMerge) {
+    verification.autoMerge = false;
+    verification.reasons.push('automatic merging is switched off (IAM_AUTOMERGE=false)');
+  }
+  console.log(verification.autoMerge ? 'automated check passed: eligible to merge without review' : `automated check: not merging automatically (${verification.reasons.join('; ')})`);
+
   writeFileSync(resolve(root, 'data/trends.json'), JSON.stringify(result.data.trends, null, 2) + '\n');
   writeFileSync(resolve(root, 'data/recommendations.json'), formatCompact(result.data.recommendations) + '\n');
   writeFileSync(resolve(root, 'data/meta.json'), JSON.stringify(result.data.meta, null, 2) + '\n');
-  if (bodyFile) writeFileSync(resolve(bodyFile), renderPrBody({ applied: result.applied, rejected: result.rejected, today, model: result.model }));
+  if (bodyFile) writeFileSync(resolve(bodyFile), renderPrBody({ applied: result.applied, rejected: result.rejected, today, model: result.model, verification }));
   console.log(`applied ${result.applied.length} edit(s): ${result.applied.map((a) => `${a.kind}:${a.id}`).join(', ')}`);
-  if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `applied=${result.applied.length}\n`);
+  if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `applied=${result.applied.length}\nautomerge=${verification.autoMerge}\n`);
 }
 
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);

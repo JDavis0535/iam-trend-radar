@@ -185,7 +185,7 @@ export function applyProposals(data, proposals, feedItems, { today, maxApplied =
         next.sources.push({ title: e.title, publisher: e.source, url: e.link, type: SOURCE_TYPE[e.sourceId] || 'news', published: dateOnly(e.published), accessed: today });
         have.add(e.link);
       }
-      const note = `Drafted by the automated weekly update on ${today} from ${evidence.map((e) => e.link).join(', ')}. Not yet confirmed by a reviewer.`;
+      const note = `Automated update on ${today} from ${evidence.map((e) => e.link).join(', ')}. Not reviewed by a person.`;
       next.needsVerification = true;
       next.verificationNotes = item.needsVerification && isStr(item.verificationNotes) ? `${item.verificationNotes} ${note}` : note;
     }
@@ -208,8 +208,12 @@ function show(v) {
 }
 
 /** Markdown body for the pull request: what changed and why, the evidence, rejects, and the reviewer checklist. */
-export function renderPrBody({ applied, rejected, today, model }) {
-  const out = [`Automated weekly content update proposed on ${today} by ${model}. **Nothing here is published until you merge.**`, ''];
+export function renderPrBody({ applied, rejected, today, model, verification = null }) {
+  const out = [`Automated weekly content update proposed on ${today} by ${model}.`];
+  if (verification && verification.autoMerge) out.push('', '**Automated check passed:** an independent model call found every edit supported by its cited headlines, and none changes maturity or momentum. This PR is merged automatically; the trends it touches stay marked **Needs verification** on the site until a person clears them.');
+  else if (verification) out.push('', `**Not merged automatically.** ${verification.reasons.join('; ')}.`, '', '**Nothing here is published until you merge.**');
+  else out.push('', '**Nothing here is published until you merge.**');
+  out.push('');
   out.push('## Reviewer checklist', '',
     '- [ ] Every claim below is supported by the linked headline (open it, do not trust the summary).',
     '- [ ] Maturity and momentum changes are justified, not just a reaction to one headline.',
