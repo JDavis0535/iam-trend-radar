@@ -25,9 +25,11 @@ const SOURCE_TYPE = { fido: 'news', openid: 'news', nist: 'government', cisa: 'g
 
 /** JSON Schema for the model's reply. Every field is nullable: null means "leave this field alone". */
 export function responseSchema(taxonomy) {
-  const enumOf = (key) => ({ type: ['string', 'null'], enum: [...taxonomy[key].map((x) => x.id), null] });
-  const text = { type: ['string', 'null'] };
-  const list = { type: ['array', 'null'], items: { type: 'string' } };
+  // Nullable values use anyOf: the API rejects an enum next to a type array ("Enum value ... does not match declared type").
+  const nullable = (schema) => ({ anyOf: [schema, { type: 'null' }] });
+  const enumOf = (key) => nullable({ type: 'string', enum: taxonomy[key].map((x) => x.id) });
+  const text = nullable({ type: 'string' });
+  const list = nullable({ type: 'array', items: { type: 'string' } });
   const changes = {
     type: 'object',
     additionalProperties: false,
@@ -73,7 +75,9 @@ Rules:
 - Keep the style of the existing text: plain, neutral, no marketing language. Summaries are at most 280 characters, "whyItMatters" at most 500, recommendation descriptions at most 400. Recommendation "steps" has 3 to 5 items.
 - Do not add numbers, percentages, dollar amounts or statistics unless a cited feed item states them, and then attribute them in the sentence.
 - "rationale" is one or two sentences for the human reviewer explaining what in the evidence justifies the edit.
-- Reply with JSON only, matching the schema.`;
+- Reply with JSON only: no prose and no code fence. Use exactly this shape, with these exact key names:
+{"proposals": [{"kind": "trend" or "recommendation", "id": "<existing id>", "changes": {<only the fields you are changing>}, "evidence": ["<feed item id>", ...], "rationale": "<one or two sentences>"}]}
+  Editable fields on a trend: momentum, maturity, summary, whyItMatters, risks, keyStandards. Editable fields on a recommendation: horizon, effort, impact, description, steps, successMetrics. Do not include any other field (never title, id or sources). In "changes" you may omit a field or set it to null to leave it unchanged; list and text fields replace the whole current value.`;
 
 /** Builds the user message: the current content (compact), the recent feed, and the keyword signals. */
 export function buildUserPrompt({ trends, recommendations, feedItems, signals, today }) {

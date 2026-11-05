@@ -39,7 +39,10 @@ export async function askModel(client, { data, feedItems, signals, today, model 
     message = await run({ format: { type: 'json_schema', schema: responseSchema(data.taxonomy) } });
   } catch (e) {
     // The structured-output schema was rejected: retry once with the prompt alone. Output is validated either way.
-    if (e && e.status === 400) message = await run({});
+    if (e && e.status === 400) {
+      console.warn(`WARN structured-output schema rejected (${String(e.message || e).slice(0, 300)}); retrying without it`);
+      message = await run({});
+    }
     else throw e;
   }
   const text = message.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
@@ -59,7 +62,7 @@ export async function propose({ client, data, feed, signals, today, now = Date.n
   if (stopReason === 'refusal') return { note: 'The model declined the request; no edits proposed.' };
   const reply = parseReply(text);
   if (!reply) return { note: `Could not parse the model reply as the expected JSON (stop reason: ${stopReason}); no edits applied.` };
-  return { ...applyProposals(data, reply.proposals, feedItems, { today }), model };
+  return { ...applyProposals(data, reply.proposals, feedItems, { today }), model, rawText: text, stopReason };
 }
 
 function arg(name) {
@@ -92,7 +95,12 @@ async function main() {
   if (result.note) { console.log(result.note); return; }
 
   for (const r of result.rejected) console.log(`rejected ${r.label}: ${r.reason}`);
-  if (!result.applied.length) { console.log('No edits passed the guard rails; nothing to propose.'); return; }
+  if (!result.applied.length) {
+    // The reply is built from public feed text, so printing the start of it is safe and makes a bad shape debuggable.
+    if (result.rejected.length) console.log(`model reply (stop reason ${result.stopReason}, first 2500 chars): ${String(result.rawText || '').slice(0, 2500)}`);
+    console.log('No edits passed the guard rails; nothing to propose.');
+    return;
+  }
 
   writeFileSync(resolve(root, 'data/trends.json'), JSON.stringify(result.data.trends, null, 2) + '\n');
   writeFileSync(resolve(root, 'data/recommendations.json'), formatCompact(result.data.recommendations) + '\n');
