@@ -3,7 +3,7 @@ window.IAM_DATA = {
  "meta": {
   "schemaVersion": 1,
   "datasetVersion": "2026.11.0",
-  "lastUpdated": "2026-11-05",
+  "lastUpdated": "2026-11-09",
   "disclaimer": "Curated summary; verify before acting. Anything marked \"Needs verification\" has unconfirmed claims."
  },
  "taxonomy": {
@@ -187,6 +187,7 @@ window.IAM_DATA = {
    "keyStandards": [
     "FIDO2 (WebAuthn + CTAP)",
     "W3C Web Authentication Level 3 (W3C Recommendation)",
+    "W3C Web Authentication Level 4 (First Public Working Draft)",
     "NIST SP 800-63B"
    ],
    "relatedTrends": [
@@ -232,11 +233,19 @@ window.IAM_DATA = {
      "type": "news",
      "published": "2026-10-15",
      "accessed": "2026-11-05"
+    },
+    {
+     "title": "First Public Working Draft: Web Authentication: An API for accessing Public Key Credentials Level 4",
+     "publisher": "W3C News",
+     "url": "https://www.w3.org/news/2026/first-public-working-draft-web-authentication-an-api-for-accessing-public-key-credentials-level-4/",
+     "type": "standard",
+     "published": "2026-09-15",
+     "accessed": "2026-11-09"
     }
    ],
    "needsVerification": true,
-   "verificationNotes": "Automated update on 2026-11-05 from https://www.w3.org/news/2026/web-authentication-an-api-for-accessing-public-key-credentials-level-3-is-now-a-w3c-recommendation/, https://fidoalliance.org/7-billion-passkeys-and-counting-the-next-chapter-of-passwordless-authentication/. Not reviewed by a person.",
-   "lastUpdated": "2026-11-05"
+   "verificationNotes": "Automated update on 2026-11-05 from https://www.w3.org/news/2026/web-authentication-an-api-for-accessing-public-key-credentials-level-3-is-now-a-w3c-recommendation/, https://fidoalliance.org/7-billion-passkeys-and-counting-the-next-chapter-of-passwordless-authentication/. Not reviewed by a person. Automated update on 2026-11-09 from https://www.w3.org/news/2026/first-public-working-draft-web-authentication-an-api-for-accessing-public-key-credentials-level-4/. Not reviewed by a person.",
+   "lastUpdated": "2026-11-09"
   },
   {
    "id": "zero-trust-identity",
@@ -644,7 +653,7 @@ window.IAM_DATA = {
    "impact": "high",
    "momentum": "rising",
    "summary": "AI agents act on behalf of users and call tools and APIs, raising new questions about how to identify, authenticate, authorize, delegate to and audit autonomous software actors.",
-   "whyItMatters": "Agents can chain actions across systems using delegated credentials, which strains models built for human sessions and static service accounts. Scoped, short-lived, auditable delegation is an active area of standards and product work.",
+   "whyItMatters": "Agents can chain actions across systems using delegated credentials, which strains models built for human sessions and static service accounts. Scoped, short-lived, auditable delegation is an active area of standards and product work. Agent-initiated payments raise a further question: who the agent is and what the consumer has authorized it to do. The OpenID Foundation raised this in its comments on a draft EMVCo agentic payments framework.",
    "risks": [
     "Over-broad delegated tokens give an agent more access than the task needs",
     "Prompt injection can turn legitimate agent access into misuse",
@@ -709,11 +718,35 @@ window.IAM_DATA = {
      "type": "news",
      "published": "2026-10-12",
      "accessed": "2026-11-05"
+    },
+    {
+     "title": "OIDF responds to EMVCo Agentic Payments framework draft",
+     "publisher": "OpenID Foundation",
+     "url": "https://openid.net/oidf-responds-to-emvco-agentic-payments-framework-draft/",
+     "type": "news",
+     "published": "2026-10-08",
+     "accessed": "2026-11-09"
+    },
+    {
+     "title": "Authenticate 2026 Day 3: Trusting the transaction in the agentic economy",
+     "publisher": "FIDO Alliance",
+     "url": "https://fidoalliance.org/authenticate-2026-day-3-trusting-the-transaction-in-the-agentic-economy/",
+     "type": "news",
+     "published": "2026-10-21",
+     "accessed": "2026-11-09"
+    },
+    {
+     "title": "ID Tech: IDEMIA Adds Passkeys and Restricted-Use Tokens for AI-Agent Payments",
+     "publisher": "FIDO Alliance",
+     "url": "https://fidoalliance.org/id-tech-idemia-adds-passkeys-and-restricted-use-tokens-for-ai-agent-payments/",
+     "type": "news",
+     "published": "2026-10-05",
+     "accessed": "2026-11-09"
     }
    ],
    "needsVerification": true,
-   "verificationNotes": "Automated update on 2026-11-05 from https://openid.net/oidf-publishes-threat-model-for-cross-boundary-ai-agents/. Not reviewed by a person.",
-   "lastUpdated": "2026-11-05"
+   "verificationNotes": "Automated update on 2026-11-05 from https://openid.net/oidf-publishes-threat-model-for-cross-boundary-ai-agents/. Not reviewed by a person. Automated update on 2026-11-09 from https://openid.net/oidf-responds-to-emvco-agentic-payments-framework-draft/, https://fidoalliance.org/authenticate-2026-day-3-trusting-the-transaction-in-the-agentic-economy/, https://fidoalliance.org/id-tech-idemia-adds-passkeys-and-restricted-use-tokens-for-ai-agent-payments/. Not reviewed by a person.",
+   "lastUpdated": "2026-11-09"
   },
   {
    "id": "identity-regulation",
