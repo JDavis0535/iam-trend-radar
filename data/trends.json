@@ -12,6 +12,7 @@
     "whyItMatters": "Passwords and one-time codes are widely targeted by phishing and credential stuffing. Passkeys remove the shared secret from the login flow, which can reduce phishing exposure and password-reset workload, but they force a rethink of enrollment, recovery and lost-device processes. The FIDO Alliance estimated in October 2026 that 7 billion passkeys are in use worldwide.",
     "risks": [
       "Account recovery can become the weakest link",
+      "Attackers may register their own passkey on a victim's account, so enrollment and new-credential events need protection and monitoring",
       "Synced passkeys shift trust to the credential manager or platform provider",
       "Legacy applications keep passwords alive in mixed estates",
       "Attestation and assurance needs differ for regulated use cases"
@@ -73,11 +74,19 @@
         "type": "standard",
         "published": "2026-09-15",
         "accessed": "2026-11-09"
+      },
+      {
+        "title": "Security Boulevard: Attackers Can’t Steal Passkeys, So They’re Enrolling Their Own",
+        "publisher": "FIDO Alliance",
+        "url": "https://fidoalliance.org/security-boulevard-attackers-cant-steal-passkeys-so-theyre-enrolling-their-own/",
+        "type": "news",
+        "published": "2026-11-13",
+        "accessed": "2026-11-16"
       }
     ],
     "needsVerification": true,
-    "verificationNotes": "Automated update on 2026-11-05 from https://www.w3.org/news/2026/web-authentication-an-api-for-accessing-public-key-credentials-level-3-is-now-a-w3c-recommendation/, https://fidoalliance.org/7-billion-passkeys-and-counting-the-next-chapter-of-passwordless-authentication/. Not reviewed by a person. Automated update on 2026-11-09 from https://www.w3.org/news/2026/first-public-working-draft-web-authentication-an-api-for-accessing-public-key-credentials-level-4/. Not reviewed by a person.",
-    "lastUpdated": "2026-11-09"
+    "verificationNotes": "Automated update on 2026-11-05 from https://www.w3.org/news/2026/web-authentication-an-api-for-accessing-public-key-credentials-level-3-is-now-a-w3c-recommendation/, https://fidoalliance.org/7-billion-passkeys-and-counting-the-next-chapter-of-passwordless-authentication/. Not reviewed by a person. Automated update on 2026-11-09 from https://www.w3.org/news/2026/first-public-working-draft-web-authentication-an-api-for-accessing-public-key-credentials-level-4/. Not reviewed by a person. Automated update on 2026-11-16 from https://fidoalliance.org/security-boulevard-attackers-cant-steal-passkeys-so-theyre-enrolling-their-own/. Not reviewed by a person.",
+    "lastUpdated": "2026-11-16"
   },
   {
     "id": "zero-trust-identity",
